@@ -8,4 +8,12 @@ Fits files are common at DS so we want to load it into the following format:
 /Y/<ID>_label
 
 We are planning on using a h5 format.
+
+
+I'm going to be documenting the Plasticc Kaggle set into an H5 file.
+
+I'm thinking that there will be groups X and Y.
+
+Where X will contain all of the light curve data and Y will contain the target
+
  
