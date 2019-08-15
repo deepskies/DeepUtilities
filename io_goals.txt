@@ -1,0 +1,11 @@
+ML engineers at deep skies are given a variety of data formats and efficiently loading the data for training is a bottleneck.
+
+The goal of the io part of dsutils is meant to allow people at deepskies to use a standardized method for loading data into models for training.
+
+Fits files are common at DS so we want to load it into the following format:
+
+/X/<ID>_data
+/Y/<ID>_label
+
+We are planning on using a h5 format.
+ 
