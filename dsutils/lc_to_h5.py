@@ -11,7 +11,7 @@ from astropy.io import fits
 
 
 class IO:
-    def __init__(self, id_col='object_id', filepath):
+    def __init__(self, filepath):
         """
         * Loads light curve data
         * Creates the h5 file
@@ -19,8 +19,8 @@ class IO:
 
         """
         self.filepath = filepath 
-        self.id_col = id_col
-        # self.lcs = Big()
+        
+       
         os.getcwd()
         self.df = pd.read_csv('../../cosmoNODE/demos/data/training_set.csv') #data filepath
         self.labels = pd.read_csv('../../cosmoNODE/demos/data/training_set_metadata.csv') #labels filepath
@@ -28,13 +28,20 @@ class IO:
         # main dataset h5 file
         self.f = h5py.File("lc.hdf5", 'w')
     
-    def all_files(self):
+    def image_set(self):
+        columns = labels.columns
+        labels = []
+        for objdict in columns:
+            label = labels[objdict]
+            label = np.asarray(label)
+            labels.append(label)
+
         image_data = []
         for filename in glob.glob('/*.fits', filepath): 
             im=fits.open(filename)
             img_data = im[0].data
             img_data = img_data.reshape(-1, 101,101)
-            image_data.append(img_data)
+            image_data.append(img_data)    
 
     def process(self):
         """
@@ -55,6 +62,8 @@ class IO:
         X = self.f.create_group('X')
         Y = self.f.create_group('Y')
         
+        X = X.create_dataset('LensData.h5', data=image_data)
+        Y = Y.create_dataset('LensLabels.h5', data=labels)
 
         for i, group in enumerate(groups):
             group_id = group[0]
