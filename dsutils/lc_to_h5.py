@@ -29,6 +29,7 @@ class IO:
         self.f = h5py.File("lc.hdf5", 'w')
     
     def image_set(self):
+        ''' Load labels + Image Data '''
         columns = labels.columns
         labels = []
         for objdict in columns:
