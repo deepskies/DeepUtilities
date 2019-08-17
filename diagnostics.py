@@ -16,10 +16,24 @@ import seaborn as sn
 import numpy as np
 from matplotlib.pyplot import cm
 import sklearn
-#import scikitplot as skplt
+import scikitplot as skplt
 import argparse
 
 class Diagnostics(object):
+    """
+    Class that creates plots for regression or classification problems in machine learning problems
+    
+    Attributes:
+        actual - list or array, the true labels inputted into model
+        predicted - list or array, the predicted labels outputted by your model
+        acc - list or array, in format: [acc_train_per_epoch, acc_validation_per_epoch]
+        loss - list or array, in format: [loss_train_per_epoch, loss_validation_per_epoch]
+        auc - list or array, in format: [auc_train_per_epoch, auc_validation_per_epoch]
+        feature_list - list, features used to train model
+        cross_val 
+        data_batch - array, batch of image pixels 
+        labels_batch - array, labels matching data_batch images
+    """
     
     # Plot axes formatting
     plt.rcParams['axes.linewidth']=3
@@ -32,18 +46,23 @@ class Diagnostics(object):
     plt.rc('ytick.major', size=8, pad=8)
     plt.rc('ytick.minor', size=6, pad=5)
     
-    def __init__(self, actual, predicted, acc, loss, auc, pixel_values, feature_list, cross_val):
+    def __init__(self, actual, predicted, acc=0, loss=0, auc=0, feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
         # Mandatory lists for diagnostics
         self.actual=actual
         self.predicted=predicted 
 
         # User-added lists for diagnostics
         self.acc=acc; self.loss=loss; self.auc = auc
-        self.pixel_values=pixel_values
         self.feature_lists=feature_list
         self.cross_val=cross_val
+        self.data = data_batch
+        self.labels_batch = labels_batch
+    
+    def convert_to_index(self, array_categorical):
+        array_index = [np.argmax(array_temp) for array_temp in array_categorical]
+        return array_index
 
-  
+      
     # Plots confusion matrix. If norm is set, values are between 0-1. Shows figure if show is set
     def plot_cm(self, figsize = (6, 4), norm=True, show=True):
         """
@@ -54,9 +73,19 @@ class Diagnostics(object):
            - norm: boolean, whether or not you want your confusion matrix normalized (between 0-1)
            - show: boolean, whether you want to plt.show() your figure or just save it to your computer 
         """
-        cm=confusion_matrix(self.actual, self.predicted)
+        #if self.actual == None or self.predicted == None:
+            #raise NameError("Missing either actual predicted labels")
+        
+        #if (len(self.actual) != len(self.predicted)):
+            #raise NameError("Predicted and actual labels must be same shape")
+            
+        #converting raw labels into a 1D list
+        actual_lbl = self.convert_to_index(self.actual)
+        pred_lbl = self.convert_to_index(self.predicted)
+            
+        cm=confusion_matrix(actual_lbl, pred_lbl)
         plt.figure(figsize=figsize)
-        labels = np.unique(self.predicted).tolist()
+        labels = np.unique(pred_lbl).tolist()
         np.set_printoptions(precision=2)
 
         if (norm):
@@ -69,7 +98,8 @@ class Diagnostics(object):
             file_name = "Confusion_Matrix.jpeg"
             plt.title("Confusion Matrix", fontsize=14)
 
-        sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels, cmap="Blues", annot_kws={"size": 10}, fmt='.2f')
+        sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels, 
+                   cmap="Blues", annot_kws={"size": 10}, fmt='.2f')
 
         plt.yticks(fontsize=14)
         plt.xticks(fontsize=14)
@@ -79,9 +109,9 @@ class Diagnostics(object):
         plt.savefig(file_name)
         if (show): plt.show()
         plt.close()
-        
-    # Plots metrics by epoch. Plots either "loss", "accuracy", or "auc" based on keyword (default is all three). Shows figure if show is set
-    def plot_metrics_per_epoch(self, figsize = (6, 4), name_plot=[0,1,2], figname="metrics.png", show=True):
+    
+    
+    def plot_metrics_per_epoch(self, figsize = (15, 4), name_plot=[0,1,2], figname="metrics.png", show=True):
         """
         Plots accuracy, loss, and auc curves per epoch
 
@@ -92,7 +122,6 @@ class Diagnostics(object):
         """
         num_graphs = len(name_plot)
         fig, axes = plt.subplots(nrows=1, ncols=num_graphs, figsize=figsize)
-        
         
         for i, ele in enumerate(name_plot):
             if (ele == 0):
@@ -113,10 +142,10 @@ class Diagnostics(object):
 
             axes[i].plot(metric_epoch_train, '-', color='seagreen', label='Training')
             axes[i].plot(metric_epoch_valid, '--', color='blue', label='Validation')
-            axes[i].set_title("Epoch vs " + name_plot, fontsize=26)
+            axes[i].set_title("Epoch vs. " + name_plot, fontsize=20)
             
-            axes[i].set_xlabel("Epoch", fontsize=20)
-            axes[i].set_ylabel(name_plot, fontsize=20)
+            axes[i].set_xlabel("Epoch", fontsize=16)
+            axes[i].set_ylabel(name_plot, fontsize=16)
             axes[i].tick_params(labelsize=16)
             axes[i].legend(loc='best')
 
@@ -124,6 +153,7 @@ class Diagnostics(object):
         fig.savefig(figname, bbox_inches='tight', transparent=True)
         if (show): fig.show()      
     
+    # need to fix this function
     def plot_cross_validation(self, figsize = (6, 4), show=True):
         file_name = "K_fold_Cross_Validation.jpeg"
         plt.figure(figsize=figsize)
@@ -138,7 +168,7 @@ class Diagnostics(object):
         plt.close()
     
     
-    def ROC_plot_sk(self, figsize = (6, 4), show=True):
+    def ROC_plot(self, figsize = (6, 4), show=True):
         """
         Plots the ROC curve between the predicted and actual labels
         Note: "actual" labels must be a 1D array
@@ -147,32 +177,12 @@ class Diagnostics(object):
           - figsize: tuple, the desired size of the image
           - show: boolean, whether you want to plt.show() your figure or just save it to your computer 
         """
-        skplt.metrics.plot_roc(self.actual, self.prediction, figsize=figsize)
+        actual_lbl = self.convert_to_index(self.actual)
+        #actual_lbl = [np.argmax(array_temp) for array_temp in self.actual]
+        skplt.metrics.plot_roc(actual_lbl, self.predicted, figsize=figsize)
         if (show): plt.show()
         plt.close()
-    
-    '''
-    def ROC_plot(self, figsize = (6, 4), show=True):
-        true_positive = numpy.count_nonzeros(self.actual*self.predicted) # people are actually positive that you declare positive
-        false_negative = numpy.count_nonzeros(self.predicted*numpy.where(self.actual == 1, 0, 1)) # people are actually negative that you declare positive
-        true_positive_rate = true_positive/(true_positive+false_negative) 
-        true_negatve = numpy.count_nonzero(self.predicted)-true_positive # people are actually negative that you declare negative
-        false_positive = numpy.count_nonzeros(numpy.where(self.predicted == 1, 0, 1) - false_negative # people are actually positive that you declare negative
-        false_positive_rate = 1 - (true_negative/(true_negative+false_positive))
-
-
-        file_name = "ROC.jpeg"
-        plt.figure(figsize=figsize)
-        plt.tile("ROC", fontsize=14)
-        plt.yticks(fontsize=14)
-        plt.xticks(fontsize=14)
-        plt.ylabel("TPR", fontsize=14)
-        plt.xlabel("FPR", fontsize=14)
-        plt.plot(false_positive_rate, true_positive_rate)
-        plt.savefig(file_name)
-        if (show): plt.show()
-        plt.close()
-    '''                                          
+                                          
     
     def residual_dist_by_feature(self, figsize = (6,8), target='Target', hex_bin=False, show=True):
         file_name = '{}_errors_by_feature.pdf'.format(target)
@@ -214,12 +224,17 @@ class Diagnostics(object):
         plt.close()
     
     
-    def target_distributions(self, target='Target', x_scale='linear', y_scale='linear', show=True):
+    def target_distributions(self, figsize=(6, 4), target='Target', x_scale='linear', y_scale='linear', show=True):
         file_name = '{}_distributions.pdf'.format(target)
         # Assign colors for each group and the names
         colors = ['#E69F00', '#56B4E9']
         names = ['True {}'.format(target), 'Predicted {}'.format(target)]
-        plt.hist([self.actual,self.predicted], bins = 50, color=colors, label=names)
+        
+        actual_lbls = self.convert_to_index(self.actual)
+        pred_lbls = self.convert_to_index(self.predicted)
+        
+        plt.figure(figsize=figsize)
+        plt.hist([actual_lbls, pred_lbls], color=colors, label=names)
         plt.yscale(y_scale)
         plt.xscale(x_scale)
         plt.yticks(fontsize=14)
@@ -232,9 +247,7 @@ class Diagnostics(object):
         if (show): plt.show()
         plt.close()
 
-
-
-    def plot_sample_img(self, data, labels, figsize, filename="Image_Sample.png", show=True):
+    def plot_sample_img(self, figsize=(10, 10), filename="Image_Sample.png", show=True):
         """
         Plots data where each row of the plot consists of the same image in different channels (bands)
 
@@ -249,18 +262,19 @@ class Diagnostics(object):
         import numpy as np
 
         plt.figure(figsize=figsize)
-
+        
+        num_imgs = len(self.data)
         counter = 1
-        num_imgs = len(data)
+        labels = self.convert_to_index(self.labels_batch)
 
         # if the image data is in the format [batch_size, channels, height, width]
-        if (data.shape)[1] < (data.shape)[3]:
-            num_bands = (data.shape)[1]
+        if (self.data.shape)[1] < (self.data.shape)[3]:
+            num_bands = (self.data.shape)[1]
         # if the image data is in the format [batch_size, height, width, channels]
         else:
-            num_bands = (data.shape)[3]
+            num_bands = (self.data.shape)[3]
             
-        for i in range(len(data)):
+        for i in range(len(self.data)):
             for j in range(num_bands):
                 #format plot horizontally
                 if num_bands == 1:
@@ -269,11 +283,11 @@ class Diagnostics(object):
                 else:
                     plt.subplot(num_imgs, num_bands, counter)                
                 # if data format in shape [batch_size, channels, height, width]
-                if (data.shape)[1] < (data.shape)[3]:
-                    plt.imshow(data[i][j], cmap='gray')
+                if (self.data.shape)[1] < (self.data.shape)[3]:
+                    plt.imshow(self.data[i][j], cmap='gray')
                 # if data format in shape [batch_size, height, width, channels]
                 else:
-                    plt.imshow(data[i, :, :, j], cmap='gray')  
+                    plt.imshow(self.data[i, :, :, j], cmap='gray')
                 plt.title("Label: "+ str(labels[i]), fontsize=14)
                 counter += 1
         
@@ -288,7 +302,11 @@ class Diagnostics(object):
                                           
    
     def precision_recall_plot(self, show=True):
-        preicision, recall = precision_recall_curve(self.actual, self.predicted)
+        plt.figure()
+        actual_lbl = self.convert_to_index(self.actual)
+        pred_lbl = self.convert_to_index(self.predicted)
+        
+        preicision, recall = precision_recall_curve(actual_lbl, pred_lbl)
         tep_kwargs = ({'step': 'post'}
                if 'step' in signature(plt.fill_between).parameters
                else {})
@@ -304,4 +322,15 @@ class Diagnostics(object):
           average_precision))
         if (show): plt.show(); plt.close()
                                           
-    #def run_diagnostics(self):
+    def run_diagnostics(self):
+        """
+        Runs through all of the available plotting methods and displays results
+        """
+        self.plot_sample_img()
+        self.plot_metrics_per_epoch()
+        self.plot_cm()
+        self.ROC_plot()
+        self.target_distributions()
+        self.output_average_precision()
+        
+        
