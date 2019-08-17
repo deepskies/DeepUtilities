@@ -16,7 +16,7 @@ import seaborn as sn
 import numpy as np
 from matplotlib.pyplot import cm
 import sklearn
-#import scikitplot as skplt
+import scikitplot as skplt
 import argparse
 
 class Diagnostics(object):
@@ -42,8 +42,13 @@ class Diagnostics(object):
         self.pixel_values=pixel_values
         self.feature_lists=feature_list
         self.cross_val=cross_val
+    
+    #@staticmethod
+    def convert_to_index(self, array_categorical):
+        array_index = [np.argmax(array_temp) for array_temp in array_categorical]
+        return array_index
 
-  
+      
     # Plots confusion matrix. If norm is set, values are between 0-1. Shows figure if show is set
     def plot_cm(self, figsize = (6, 4), norm=True, show=True):
         """
@@ -54,9 +59,19 @@ class Diagnostics(object):
            - norm: boolean, whether or not you want your confusion matrix normalized (between 0-1)
            - show: boolean, whether you want to plt.show() your figure or just save it to your computer 
         """
-        cm=confusion_matrix(self.actual, self.predicted)
+        #if self.actual == None or self.predicted == None:
+            #raise NameError("Missing either actual predicted labels")
+        
+        #if (len(self.actual) != len(self.predicted)):
+            #raise NameError("Predicted and actual labels must be same shape")
+            
+        #converting raw labels into a 1D list
+        actual_lbl = self.convert_to_index(self.actual)
+        pred_lbl = self.convert_to_index(self.predicted)
+            
+        cm=confusion_matrix(actual_lbl, pred_lbl)
         plt.figure(figsize=figsize)
-        labels = np.unique(self.predicted).tolist()
+        labels = np.unique(pred_lbl).tolist()
         np.set_printoptions(precision=2)
 
         if (norm):
@@ -69,7 +84,8 @@ class Diagnostics(object):
             file_name = "Confusion_Matrix.jpeg"
             plt.title("Confusion Matrix", fontsize=14)
 
-        sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels, cmap="Blues", annot_kws={"size": 10}, fmt='.2f')
+        sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels, 
+                   cmap="Blues", annot_kws={"size": 10}, fmt='.2f')
 
         plt.yticks(fontsize=14)
         plt.xticks(fontsize=14)
@@ -93,7 +109,6 @@ class Diagnostics(object):
         num_graphs = len(name_plot)
         fig, axes = plt.subplots(nrows=1, ncols=num_graphs, figsize=figsize)
         
-        
         for i, ele in enumerate(name_plot):
             if (ele == 0):
                 metric_epoch_train = self.loss[0]
@@ -113,7 +128,7 @@ class Diagnostics(object):
 
             axes[i].plot(metric_epoch_train, '-', color='seagreen', label='Training')
             axes[i].plot(metric_epoch_valid, '--', color='blue', label='Validation')
-            axes[i].set_title("Epoch vs " + name_plot, fontsize=26)
+            axes[i].set_title("Epoch vs. " + name_plot, fontsize=26)
             
             axes[i].set_xlabel("Epoch", fontsize=20)
             axes[i].set_ylabel(name_plot, fontsize=20)
@@ -147,7 +162,9 @@ class Diagnostics(object):
           - figsize: tuple, the desired size of the image
           - show: boolean, whether you want to plt.show() your figure or just save it to your computer 
         """
-        skplt.metrics.plot_roc(self.actual, self.prediction, figsize=figsize)
+        actual_lbl = self.convert_to_index(self.actual)
+        #actual_lbl = [np.argmax(array_temp) for array_temp in self.actual]
+        skplt.metrics.plot_roc(actual_lbl, self.predicted, figsize=figsize)
         if (show): plt.show()
         plt.close()
     
@@ -232,8 +249,6 @@ class Diagnostics(object):
         if (show): plt.show()
         plt.close()
 
-
-
     def plot_sample_img(self, data, labels, figsize, filename="Image_Sample.png", show=True):
         """
         Plots data where each row of the plot consists of the same image in different channels (bands)
@@ -288,7 +303,14 @@ class Diagnostics(object):
                                           
    
     def precision_recall_plot(self, show=True):
-        preicision, recall = precision_recall_curve(self.actual, self.predicted)
+        plt.figure()
+        actual_lbl = self.convert_to_index(self.actual)
+        pred_lbl = self.convert_to_index(self.predicted)
+        
+        print(actual_lbl)
+        print(pred_lbl)
+        
+        preicision, recall = precision_recall_curve(actual_lbl, pred_lbl)
         tep_kwargs = ({'step': 'post'}
                if 'step' in signature(plt.fill_between).parameters
                else {})
