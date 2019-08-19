@@ -58,8 +58,6 @@ class Conv1DNet(nn.Module):
         return x.double()
 
 
-
-
 class Conv2DNet(nn.Module):
     def __init__(self, input_shape=(28, 28), out_classes=10):
         super(Net, self).__init__()

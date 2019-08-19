@@ -16,7 +16,7 @@ This network is defined recursively.
 '''
 class VAE(nn.Module):
     def __init__(self, input_dim):
-        super(Net, self).__init__()
+        super(VAE, self).__init__()
         self.input_dim = input_dim
 
         self.encoder = []
