@@ -1,10 +1,12 @@
 import torch
 import torch.nn.functional as F
 
-def train(model, device, train_loader, optimizer, epoch):
+def train(model, device, train_loader, optimizer, epoch, log_interval):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
+        data = data.view(1, -1)
+
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
@@ -22,6 +24,7 @@ def test(model, device, test_loader):
     correct = 0
     with torch.no_grad():
         for data, target in test_loader:
+            data = data.view(1, -1)
             data, target = data.to(device), target.to(device)
             output = model(data)
             test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss

@@ -1,5 +1,5 @@
 import torch
-
+from torchvision import datasets, transforms
 from google.cloud import storage
 import dsutils as ds
 
@@ -24,7 +24,7 @@ def all_datasets():
 def get_dataset(dataset_name='mnist'):
     # building for mnist rn
     dataloader, experiment_path = fetch(dataset_name)
-    gcs_sets, other_sets = datasets_list() # ['mnist']
+    gcs_sets, other_sets = all_datasets() # ['mnist']
     all_sets = gcs_sets + other_sets
 
     if dataset_name in other_sets:
@@ -42,9 +42,9 @@ def non_gcs_fetch(dataset_name):
     # for set in sets:
     #     if dataset_name == set:
 
-    if dataset == 'mnist':
-        train_loader, test_loader = mnist_loaders()
-    elif dataset == 'cifar':
+    if dataset_name == 'mnist':
+        train_loader, test_loader = mnist_loaders(1, 1)
+    elif dataset_name == 'cifar':
         train_loader, test_loader = cifar_loaders()
     return train_loader, test_loader
 
@@ -67,13 +67,13 @@ def gcs_fetch(dataset_name):
 
 # to deprecate
 def fetch(dataset):
-    gcs_sets, other_sets = datasets_list() # ['mnist']
+    gcs_sets, other_sets = all_datasets() # ['mnist']
 
     # assuming that type(dataset) == string rn
     if isinstance(dataset, str):
         # this is a hack to get mnist working
         if dataset in other_sets:
-           non_gcs_fetch(dataset)
+           train_loader, test_loader = non_gcs_fetch(dataset)
         else:
             # todo: google cloud h5 retrieve
             dataset = dataset
@@ -97,14 +97,13 @@ def fetch(dataset):
 # tensorflow-io?
 def build_dataloader(dataset):
     # [(X1, Y1), ... , (Xn, Yn)]
-
     pass
 
 
     # todo https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
 def mnist_loaders(batch_size, test_batch_size):
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-
+    # use_cuda = not args.no_cuda and torch.cuda.is_available()
+    # kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(experiment_path('mnist'), train=True, download=True,
                            transform=transforms.Compose([
@@ -112,13 +111,13 @@ def mnist_loaders(batch_size, test_batch_size):
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
 
-        batch_size=batch_size, shuffle=True, **kwargs)
+        batch_size=batch_size, shuffle=True) # , **kwargs)
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST(experiment_path('mnist'), train=False, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
-        batch_size=test_batch_size, shuffle=True, **kwargs)
+        batch_size=test_batch_size, shuffle=True) # **kwargs)
 
     return train_loader, test_loader
 
@@ -128,6 +127,6 @@ def cifar_loaders():
 
 def get_dims_from_loader(dataloader):
     # expecting standard (X, Y)
-    input_shape = dataloader.dataset[0][0].shape
-    output_shape = dataloader.dataset[0][1].shape
+    input_shape =  784 # dataloader.dataset[0][0].shape
+    output_shape = 10 # dataloader.dataset[0][1].shape
     return input_shape, output_shape

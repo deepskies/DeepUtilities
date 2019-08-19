@@ -9,6 +9,8 @@ import torch.optim as optim
 from google.cloud import storage
 
 import dsutils as ds
+import dsutils.auto.mlp as mlp
+import dsutils.auto.run_epoch as run_epoch
 
 class Baselines:
     '''
@@ -28,7 +30,7 @@ class Baselines:
             * string in ['mlp', 'vae', 'conv1d', # todo - 'conv2d', 'node', 'gan', 'lstm', 'rnn']
 
     '''
-    def __init__(dataset_name='mnist', model='mlp', epochs=5, lr=1e-2, classify=True):
+    def __init__(self, dataset_name='mnist', model='mlp', epochs=5, lr=1e-2, classify=True):
         # todo: logging for diagnostics
         self.epochs = epochs
         self.logs = []
@@ -37,7 +39,7 @@ class Baselines:
         # for now returns pytorch train_loader, test_loader
         self.train_loader, self.test_loader = ds.get_dataset(dataset_name)
         self.in_dim, self.out_dim = ds.data.get_dims_from_loader(self.train_loader)
-        self.model = ds.auto.mlp.MLP(self.in_dim, self.out_dim)
+        self.model = mlp.MLP(self.in_dim, self.out_dim)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.device = torch.device('cuda:' if torch.cuda.is_available() else 'cpu')
 
@@ -45,8 +47,8 @@ class Baselines:
 
     def run(self):
         for i in range(self.epochs):
-            ds.auto.run_epoch.train(self.model, self.device, self.train_loader, i)
-            ds.auto.run_epoch.test(self.model, self.device, self.test_loader)
+            run_epoch.train(self.model, self.device, self.train_loader, self.optimizer, i, 5)
+            run_epoch.test(self.model, self.device, self.test_loader)
 
 
 def baselines(dataset):
