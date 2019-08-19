@@ -39,9 +39,9 @@ def get_dataset(dataset_name='mnist'):
 
 def non_gcs_fetch(dataset_name):
     sets = non_gcs_datasets()
-    for set in sets:
-        if dataset_name == set:
-            
+    # for set in sets:
+    #     if dataset_name == set:
+
     if dataset == 'mnist':
         train_loader, test_loader = mnist_loaders()
     elif dataset == 'cifar':
@@ -65,7 +65,6 @@ def gcs_fetch(dataset_name):
             source_blob_name,
             destination_file_name))
 
-
 # to deprecate
 def fetch(dataset):
     gcs_sets, other_sets = datasets_list() # ['mnist']
@@ -74,7 +73,7 @@ def fetch(dataset):
     if isinstance(dataset, str):
         # this is a hack to get mnist working
         if dataset in other_sets:
-
+           non_gcs_fetch(dataset)
         else:
             # todo: google cloud h5 retrieve
             dataset = dataset
@@ -121,7 +120,7 @@ def mnist_loaders(batch_size, test_batch_size):
                        ])),
         batch_size=test_batch_size, shuffle=True, **kwargs)
 
-        return train_loader, test_loader
+    return train_loader, test_loader
 
 def cifar_loaders():
     # todo

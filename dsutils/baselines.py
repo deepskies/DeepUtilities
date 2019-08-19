@@ -3,9 +3,8 @@ import os.path
 import h5py
 
 import torch
-from torch.utils.data # import DataLoader, Dataset
+import torch.utils.data # import DataLoader, Dataset
 
-import tensorflow as tf
 from google.cloud import storage
 
 import dsutils as ds
