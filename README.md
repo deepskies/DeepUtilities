@@ -26,3 +26,8 @@ https://github.com/deepskies/DataPreparation/blob/master/Strong_Lens_No_Lens_Sou
 
 
 While the GCS upload functions have not been written, I am assuming that all datasets are on cloud or accessible via pytorch/tf datasets.
+
+h5 stuff:
+
+https://gist.github.com/branislav1991/2c4a225e3066cf1542dacdbc11f51e09
+https://gist.github.com/branislav1991/4c143394bdad612883d148e0617bdccd

@@ -32,7 +32,7 @@ class Baselines:
     def __init__(dataset_name='mnist', model=None):
         # todo: logging for diagnostics
         self.logs = []
-        self.path = ds.data.experiment_name(dataset_name)
+        self.path = ds.data.experiment_path(dataset_name)
 
         # for now returns pytorch train_loader, test_loader
         train_loader, test_loader = ds.get_dataset(dataset)
