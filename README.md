@@ -23,3 +23,6 @@ For gcs interaction:
   [Setting up authentication](https://cloud.google.com/storage/docs/reference/libraries)
 Maybe source solution from here:
 https://github.com/deepskies/DataPreparation/blob/master/Strong_Lens_No_Lens_Source_Demo.ipynb
+
+
+While the GCS upload functions have not been written, I am assuming that all datasets are on cloud or accessible via pytorch/tf datasets.
