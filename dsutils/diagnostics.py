@@ -16,7 +16,7 @@ import seaborn as sn
 import numpy as np
 from matplotlib.pyplot import cm
 import sklearn
-import scikitplot as skplt
+#import scikitplot as skplt
 import argparse
 
 class Diagnostics(object):
@@ -111,51 +111,61 @@ class Diagnostics(object):
         plt.close()
     
     
-    def plot_metrics_per_epoch(self, figsize = (15, 4), name_plot=[0,1,2], figname="metrics.png", show=True):
+    def plot_metrics_per_epoch(self, figsize = (15, 4), name_plot=[0,1,2], figname="metrics.png", show=True, save_individual=False):
         """
         Plots accuracy, loss, and auc curves per epoch
 
         Input: 
         - figsize: tuple, the size of the metric curve
         - name_plot: list, whether you want '0' (loss), '1' (accuracy), and/or '2' (auc) plots, default plots all three
-        - show: boolean, whether you want to plt.show() your figure or just save it to your computer 
+        - figname: string, what you want the combined plot to be saved as
+        - show: boolean, whether you want to plt.show() your figure or just save it to your computer
+        - save_individual: boolean, whether you want to plot and save individual metrics or if you want one large plot 
+                           with subplots for each metric
         """
         num_graphs = len(name_plot)
-        fig, axes = plt.subplots(nrows=1, ncols=num_graphs, figsize=figsize)
+        plot_name = ["Loss", "Accuracy", "AUC"]
+        metrics = np.array([(self.loss[0], self.loss[1]), (self.acc[0], self.acc[1]), (self.auc[0], self.auc[1])])
+
+        # if you want to plot individual metrics
+        if save_individual:
+            for i in name_plot:
+                print(i)
+                plt.figure(figsize=figsize)
+                metric_train = metrics[i][0]
+                metric_val =metrics[i][1]
+                
+                plt.plot(metric_train, '-', color='seagreen', label='Training')
+                plt.plot(metric_val, '--', color='blue', label='Validation')
+                
+                plt.title(plot_name[i] + " Per Epoch", fontsize=20)
+                plt.xlabel("Epoch", fontsize=14)
+                plt.ylabel(plot_name[i], fontsize=14)
+                plt.savefig(plot_name[i] + ".png", bbox_inches='tight')
+                if (show): plt.show()
+                    
+        # if you want to plot metrics as subplots in one figure
+        else:
+            fig, axes = plt.subplots(nrows=1, ncols=num_graphs, figsize=figsize)
+            for i in range(num_graphs):
+                metric_train = metrics[i][0]
+                metric_val = metrics[i][1]
+
+                axes[i].plot(metric_train, '-', color='seagreen', label='Training')
+                axes[i].plot(metric_val, '--', color='blue', label='Validation')
+                
+                axes[i].set_title(plot_name[i] + " Per Epoch", fontsize=20)
+
+                axes[i].set_xlabel("Epoch", fontsize=16)
+                axes[i].set_ylabel(plot_name[i], fontsize=16)
+                axes[i].tick_params(labelsize=16)
+                axes[i].legend(loc='best')
         
-        for i, ele in enumerate(name_plot):
-            if (ele == 0):
-                metric_epoch_train = self.loss[0]
-                metric_epoch_valid = self.loss[1]
-                name_plot = "Loss"
-            elif (ele == 1):
-                metric_epoch_train = self.acc[0]
-                metric_epoch_valid = self.acc[1]
-                name_plot = "Accuracy"
-            elif (ele == 2):
-                metric_epoch_train = self.auc[0]
-                metric_epoch_valid = self.auc[1]
-                name_plot = "AUC"
-            else:
-                raise NameError("Improper value inputted, ignoring value")
-                break
-
-            axes[i].plot(metric_epoch_train, '-', color='seagreen', label='Training')
-            axes[i].plot(metric_epoch_valid, '--', color='blue', label='Validation')
-            axes[i].set_title("Epoch vs. " + name_plot, fontsize=20)
-            
-            axes[i].set_xlabel("Epoch", fontsize=16)
-            axes[i].set_ylabel(name_plot, fontsize=16)
-            axes[i].tick_params(labelsize=16)
-            axes[i].legend(loc='best')
-            
-            extent = axes[i].get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            fig.savefig("Epoch vs " + name_plot, bbox_inches=extent.expanded(1.1, 1.2))
-
-        #plt.subplots_adjust(wspace=0.35, hspace=0.35)
-        #fig.savefig(figname, bbox_inches='tight', transparent=True)
-        if (show): fig.show()
-        fig.close()
+                plt.subplots_adjust(wspace=0.35, hspace=0.35)
+                fig.savefig(figname, bbox_inches='tight')
+                
+                if (show): fig.show()
+                #plt.close()
     
     # need to fix this function
     def plot_cross_validation(self, figsize = (6, 4), show=True):
