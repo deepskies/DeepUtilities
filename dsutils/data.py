@@ -125,3 +125,9 @@ def mnist_loaders(batch_size, test_batch_size):
 def cifar_loaders():
     # todo
     pass
+
+def get_dims_from_loader(dataloader):
+    # expecting standard (X, Y)
+    input_shape = dataloader.dataset[0][0].shape
+    output_shape = dataloader.dataset[0][1].shape
+    return input_shape, output_shape
