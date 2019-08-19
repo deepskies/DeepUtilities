@@ -121,7 +121,7 @@ class Diagnostics(object):
         - figname: string, what you want the combined plot to be saved as
         - show: boolean, whether you want to plt.show() your figure or just save it to your computer
         - save_individual: boolean, whether you want to plot and save individual metrics or if you want one large plot 
-                           with subplots for each metric
+                           with subplots for each metric.
         """
         num_graphs = len(name_plot)
         plot_name = ["Loss", "Accuracy", "AUC"]
