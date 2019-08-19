@@ -148,10 +148,14 @@ class Diagnostics(object):
             axes[i].set_ylabel(name_plot, fontsize=16)
             axes[i].tick_params(labelsize=16)
             axes[i].legend(loc='best')
+            
+            extent = axes[i].get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            fig.savefig("Epoch vs " + name_plot, bbox_inches=extent.expanded(1.1, 1.2))
 
-        plt.subplots_adjust(wspace=0.35, hspace=0.35)
-        fig.savefig(figname, bbox_inches='tight', transparent=True)
-        if (show): fig.show()      
+        #plt.subplots_adjust(wspace=0.35, hspace=0.35)
+        #fig.savefig(figname, bbox_inches='tight', transparent=True)
+        if (show): fig.show()
+        fig.close()
     
     # need to fix this function
     def plot_cross_validation(self, figsize = (6, 4), show=True):
@@ -205,6 +209,7 @@ class Diagnostics(object):
             extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
             plt.savefig(file_name, bbox_inches=extent)
         if (show): fig.show()
+        fig.close()
     
     
     def one_to_one_plot(self, target_name='Target', axis_scale='linear', show=True):
@@ -258,8 +263,6 @@ class Diagnostics(object):
           - filename: string, saved filename
           - show: boolean, whether you want to plt.show() your figure or just save it to your computer  
         """
-        import matplotlib.pyplot as plt
-        import numpy as np
 
         plt.figure(figsize=figsize)
         
