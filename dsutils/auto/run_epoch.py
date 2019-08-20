@@ -1,15 +1,16 @@
 import torch
 import torch.nn.functional as F
 
-def train(model, device, train_loader, optimizer, epoch, log_interval):
+def train(model, device, train_loader, optimizer, criterion, epoch, log_interval):
     model.train()
+    batch_size = train_loader.batch_size
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
-        data = data.view(1, -1)
+        data = data.view(batch_size, -1)
 
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = criterion(output, target)
         loss.backward()
         optimizer.step()
         if batch_idx % log_interval == 0:
@@ -18,16 +19,18 @@ def train(model, device, train_loader, optimizer, epoch, log_interval):
                 100. * batch_idx / len(train_loader), loss.item()))
 
 
-def test(model, device, test_loader):
+def test(model, device, test_loader, criterion):
     model.eval()
+    batch_size = test_loader.batch_size
+
     test_loss = 0
     correct = 0
     with torch.no_grad():
         for data, target in test_loader:
-            data = data.view(1, -1)
+            data = data.view(batch_size, -1)
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
+            test_loss += criterion(output, target).item() # sum up batch loss
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
 

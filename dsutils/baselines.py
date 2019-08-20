@@ -3,6 +3,7 @@ import os.path
 import h5py
 
 import torch
+import torch.nn as nn
 import torch.utils.data # import DataLoader, Dataset
 import torch.optim as optim
 
@@ -30,7 +31,7 @@ class Baselines:
             * string in ['mlp', 'vae', 'conv1d', # todo - 'conv2d', 'node', 'gan', 'lstm', 'rnn']
 
     '''
-    def __init__(self, dataset_name='mnist', model='mlp', epochs=5, lr=1e-2, classify=True):
+    def __init__(self, dataset_name='mnist', model='mlp', epochs=5, lr=1e-3, classify=True):
         # todo: logging for diagnostics
         self.epochs = epochs
         self.logs = []
@@ -43,12 +44,14 @@ class Baselines:
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.device = torch.device('cuda:' if torch.cuda.is_available() else 'cpu')
 
+        if classify:
+            self.criterion = nn.CrossEntropyLoss()
         self.run()
 
     def run(self):
-        for i in range(self.epochs):
-            run_epoch.train(self.model, self.device, self.train_loader, self.optimizer, i, 5)
-            run_epoch.test(self.model, self.device, self.test_loader)
+        for epoch_id in range(self.epochs):
+            run_epoch.train(self.model, self.device, self.train_loader, self.optimizer, self.criterion, epoch_id, 500)
+            run_epoch.test(self.model, self.device, self.test_loader, self.criterion)
 
 
 def baselines(dataset):

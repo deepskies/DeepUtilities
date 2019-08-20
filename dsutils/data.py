@@ -43,7 +43,7 @@ def non_gcs_fetch(dataset_name):
     #     if dataset_name == set:
 
     if dataset_name == 'mnist':
-        train_loader, test_loader = mnist_loaders(1, 1)
+        train_loader, test_loader = mnist_loaders(32, 100)
     elif dataset_name == 'cifar':
         train_loader, test_loader = cifar_loaders()
     return train_loader, test_loader
