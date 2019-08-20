@@ -18,7 +18,6 @@ def train(model, device, train_loader, optimizer, criterion, epoch, log_interval
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
-
 def test(model, device, test_loader, criterion):
     model.eval()
     batch_size = test_loader.batch_size
@@ -39,3 +38,23 @@ def test(model, device, test_loader, criterion):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+
+
+# hacky garbo solution
+def vae_train(model, device, train_loader, optimizer, criterion, epoch, log_interval):
+    model.train()
+    batch_size = train_loader.batch_size
+
+    for batch_idx, (data, _) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        data = data.view(batch_size, -1)
+
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, data)
+        loss.backward()
+        optimizer.step()
+        if batch_idx % log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))

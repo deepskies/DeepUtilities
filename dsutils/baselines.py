@@ -11,6 +11,7 @@ from google.cloud import storage
 
 import dsutils as ds
 import dsutils.auto.mlp as mlp
+import dsutils.auto.vae as vae
 import dsutils.auto.run_epoch as run_epoch
 
 class Baselines:
@@ -36,16 +37,23 @@ class Baselines:
         self.epochs = epochs
         self.logs = []
         self.path = ds.data.experiment_path(dataset_name)
+        self.model_type = model
 
         # for now returns pytorch train_loader, test_loader
         self.train_loader, self.test_loader = ds.get_dataset(dataset_name)
         self.in_dim, self.out_dim = ds.data.get_dims_from_loader(self.train_loader)
-        self.model = mlp.MLP(self.in_dim, self.out_dim)
+
+        if model == 'mlp':
+            self.model = mlp.MLP(self.in_dim, self.out_dim)
+        elif model == 'vae':
+            self.model = vae.VAE(self.in_dim, self.out_dim)
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.device = torch.device('cuda:' if torch.cuda.is_available() else 'cpu')
 
         if classify:
             self.criterion = nn.CrossEntropyLoss()
+
         self.run()
 
     def run(self):
