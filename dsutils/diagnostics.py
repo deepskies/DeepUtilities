@@ -49,13 +49,13 @@ class Diagnostics(object):
 
 
     def check_for_array(arr, name):
-        if (not hasattr(actual, '__len__') and (not isinstance(actual, str))): raise Exception(name + " is not in the appropriate format. Should be an array")
+        if (not hasattr(arr, '__len__') and (not isinstance(arr, str))): raise Exception(name + " is not in the appropriate format. Should be an array")
 
     def check_for_same_length(arr1, name1, arr2, name2):
         if (not (len(arr1) == len(arr2))): raise Exception(name1 + " and " name2 + " are not tbe same length")
 
     def check_for_dataframe(arr, name):
-         if (not isinstance(x, pd.DataFrame))
+         if (not isinstance(arr, pd.DataFrame)): raise Exception(name + " is not in the appropriate format. Should be a dataframe")
 
     
     def __init__(self, actual, predicted, acc=[0,0], loss=[0.0], auc=[0,0], feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
