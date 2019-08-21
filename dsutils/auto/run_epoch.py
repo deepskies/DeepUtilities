@@ -19,6 +19,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch, log_interval
         optimizer.step()
 
         with torch.no_grad():
+            # print(output.shape)
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
 
@@ -37,6 +38,9 @@ def test(model, device, test_loader, criterion, logs):
 
     test_loss = 0
     correct = 0
+    actuals = []
+    preds = []
+
     with torch.no_grad():
         for data, target in test_loader:
             data = data.view(batch_size, -1)
@@ -46,20 +50,23 @@ def test(model, device, test_loader, criterion, logs):
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
 
-            actual = target.flatten().tolist()
-            predicted = output.flatten().tolist()
+            preds.append(output)
+            actuals.append(target)
 
-            logs['actual'].append(actual)
-            logs['predicted'].append(predicted)
+    log_act = torch.cat(actuals, 0).numpy()
+    log_preds = torch.cat(preds, 0).numpy()
+
+    logs['actual'] = log_act
+    logs['predicted'] = log_preds
 
     test_loss /= len(test_loader.dataset)
     test_acc = 100. * correct / len(test_loader.dataset)
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
-        test_acc)))
+        test_acc))
 
-    logs['test_accs'].append(test_acc)
+    logs['test_acc'].append(test_acc)
 
 
 # hacky garbo solution
