@@ -79,10 +79,11 @@ class Diagnostics(object):
             #raise NameError("Predicted and actual labels must be same shape")
 
         #converting raw labels into a 1D list
-        actual_lbl = self.convert_to_index(self.actual)
+
+        # actual_lbl = self.convert_to_index(self.actual)
         pred_lbl = self.convert_to_index(self.predicted)
 
-        cm=confusion_matrix(actual_lbl, pred_lbl)
+        cm=confusion_matrix(self.actual, pred_lbl)
         plt.figure(figsize=figsize)
         labels = np.unique(pred_lbl).tolist()
         np.set_printoptions(precision=2)
@@ -91,8 +92,8 @@ class Diagnostics(object):
             a = cm.sum(axis=1)[:, np.newaxis]
             b = cm.astype("float")
 
-            print(f'cm sum: {a}')
-            print(f'cm.astype: {b}')
+            # print(f'cm sum: {a}')
+            # print(f'cm.astype: {b}')
 
             heatmap_value = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
             file_name = self.plot_path("Confusion_Matrix_Norm.png")
@@ -110,8 +111,8 @@ class Diagnostics(object):
         plt.ylabel("True Label", fontsize=14)
         plt.xlabel("Predicted Label", fontsize=14)
 
-        plt.savefig(file_name)
-        if (show): plt.show()
+        plt.savefig(file_name, bbox_inches='tight')
+        if show: plt.show()
         plt.close()
 
 

@@ -34,7 +34,7 @@ class Baselines:
             * string in ['mlp', 'vae', 'conv1d', # todo - 'conv2d', 'node', 'gan', 'lstm', 'rnn']
 
     '''
-    def __init__(self, dataset_name='mnist', model='mlp', epochs=1, lr=1e-3, classify=True, log_interval=500):
+    def __init__(self, dataset_name='mnist', model='mlp', epochs=1, lr=1e-3, classify=True, log_interval=500, factor=5):
         # todo: logging for diagnostics
         self.epochs = epochs
         self.logs = {
@@ -55,7 +55,7 @@ class Baselines:
         self.in_dim, self.out_dim = ds.data.get_dims_from_loader(self.train_loader)
 
         if model == 'mlp':
-            self.model = mlp.MLP(self.in_dim, self.out_dim)
+            self.model = mlp.MLP(self.in_dim, self.out_dim, factor=factor)
         elif model == 'vae':
             self.model = vae.VAE(self.in_dim, self.out_dim)
             print('not working yet, needs custom train')
