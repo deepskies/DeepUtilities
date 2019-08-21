@@ -231,7 +231,7 @@ class Diagnostics(object):
             - Target - name of the quantity that you're trying to predict
             - save_individual - can save feature graphs as multiple images or as single image
         """
-        check_for_dataframe(self.feature_list, "Feature List")
+        check_for_dataframe(self.feature_lists, "Feature List")
         num_features=len(self.feature_list.columns); figure_width, figure_height = figsize
         error=2*(self.predicted-self.actual)/(abs(self.actual)+abs(self.predicted)) #Fractional error constructed to deal with the case of actual being 0
         plt.rc('xtick',labelsize=14)
@@ -333,6 +333,8 @@ class Diagnostics(object):
           - filename: string, saved filename
           - show: boolean, whether you want to plt.show() your figure or just save it to your computer  
         """
+
+        check_for_array(self.data, "Data batch"); check_for_array(self.labels_batch, "Label batch")
 
         plt.figure(figsize=figsize)
         
