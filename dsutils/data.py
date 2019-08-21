@@ -1,3 +1,4 @@
+import os
 import torch
 from torchvision import datasets, transforms
 from google.cloud import storage
@@ -99,13 +100,17 @@ def build_dataloader(dataset):
     # [(X1, Y1), ... , (Xn, Yn)]
     pass
 
-
     # todo https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
 def mnist_loaders(batch_size, test_batch_size):
     # use_cuda = not args.no_cuda and torch.cuda.is_available()
     # kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+
+    data_path = experiment_path('minst') + 'data/'
+
+    dl = not os.path.exists(data_path)
+
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(experiment_path('mnist'), train=True, download=True,
+        datasets.MNIST(data_path, train=True, download=dl,
                            transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
@@ -113,7 +118,7 @@ def mnist_loaders(batch_size, test_batch_size):
 
         batch_size=batch_size, shuffle=True) # , **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(experiment_path('mnist'), train=False, transform=transforms.Compose([
+        datasets.MNIST(data_path, train=False, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
@@ -130,3 +135,7 @@ def get_dims_from_loader(dataloader):
     input_shape =  784 # dataloader.dataset[0][0].shape
     output_shape = 10 # dataloader.dataset[0][1].shape
     return input_shape, output_shape
+
+def build_experiment(experiment_name):
+
+    pass
