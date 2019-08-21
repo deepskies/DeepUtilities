@@ -57,9 +57,9 @@ def test(model, device, test_loader, criterion, logs):
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
-        test_acc)))
+        test_acc))
 
-    logs['test_accs'].append(test_acc)
+    logs['test_acc'].append(test_acc)
 
 
 # hacky garbo solution
