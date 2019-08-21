@@ -2,10 +2,11 @@ import math
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-def log_dims(input_dim, output_dim, factor=2):
+def log_dims(input_dim=784, output_dim=10, factor=2):
     '''
-    mnist mlp:
+    mnist mlp w factor 2:
     [784, 397, 203, 106, 58, 34, 22, 16, 13, 11, 10]
     '''
     dims = []
@@ -21,16 +22,32 @@ def log_dims(input_dim, output_dim, factor=2):
     print(dims)
     return dims
 
-def mlp_layers(layer_dims, verbose=False):
+def get_layers(layer_dims, layer_type):
     layers = []
     num_layers = len(layer_dims)
     for i in range(num_layers):
         if i == num_layers - 1:
             break
-        layers.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
+        layers.append(layer_type(layer_dims[i], layer_dims[i + 1]))
+    return layers
+
+
+def mlp_layers(layer_dims, verbose=False):
+    layer_type = nn.Linear
+    layers = get_layers(layer_dims, layer_type)
     if verbose:
         print(layers)
     return layers
+
+
+def mlp_vae(layer_dims):
+    '''
+    takes in list of layer dims, returns encoder and decoder
+    possibly redundant code
+    '''
+    enc = nn.ModuleList(mlp_layers(layer_dims))
+    dec = nn.ModuleList(mlp_layers(layer_dims[::-1]))
+    return enc, dec
 
 
 def get_ksizes(delta):
@@ -46,7 +63,6 @@ def get_ksizes(delta):
         ksizes.append(ksize)
 
     return ksizes
-
 
 def conv1d_layers(x, ksizes, max_channels=64):
     in_dim = x.dim()
