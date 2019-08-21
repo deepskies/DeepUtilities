@@ -7,171 +7,44 @@ import torch.nn.functional as F
 
 from torch.utils.data import Dataset, DataLoader
 
+import dsutils as ds
+# from dsutils.auto import run_epoch
+from dsutils.auto import shape
 
-'''
-This network is defined recursively.
-|layers| ~ log_2(input_dim)
-'''
 class VAE(nn.Module):
-    def __init__(self, input_dim):
-        super(Net, self).__init__()
-        self.input_dim = input_dim
+    '''
+    This network is defined recursively.
+    |layers| ~ log_n(input_dim)
 
-        self.encoder = []
-        self.decoder = []
+    output dim is bottleneck layer size
+    '''
+    def __init__(self, input_dim, output_dim, classify=True, layer_type='mlp', factor=2):
+        super(VAE, self).__init__()
+        if layer_type == 'mlp':
+            # whats better, this:
+            self.enc, self.dec = shape.mlp_vae(shape.log_dims(input_dim, output_dim, factor))
+            # or this: (getting rid of shape.mlp_vae)
+            # self.dims = shape.log_dims(input_dim, output_dim)
+            # self.enc = nn.ModuleList(shape.mlp_layers(self.dims))
+            # self.dec = nn.ModuleList(shape.mlp_layers(self.dims[::-1]))
+        else:
+            raise NotImplementedError("this layer time not supported yet")
 
-        self.instantiate_network()
-
-        self.enc = nn.ModuleList(self.encoder)
-        self.dec = nn.ModuleList(self.decoder)
-
-    def instantiate_network(self):
-
-        prev = self.input_dim
-        cur = self.input_dim
-
-        tuples = []
-
-        while cur != 1:
-            cur = prev // 2
-            tuples.append((prev, cur))
-            prev = cur
-
-        print(tuples)
-
-        for tup in tuples:
-            self.encoder.append(nn.Linear(tup[0], tup[1]))
-
-        for tup in tuples[::-1]:
-            self.decoder.append(nn.Linear(tup[1], tup[0]))
-
-
-    def forward(self, x, direction):
+    def single_direction(self, x, direction):
         # directions: encoding and decoding
         for layer in direction:
-            x = F.relu(layer(x))
+            # if i == self.num_layers - 1 and :
+            #     x = F.softmax(layer(x), dim=1)
+                # break
+            x = torch.tanh(layer(x))
         return x
+
+    def forward(self, x):
+        class_prediction = self.single_direction(x, self.enc)
+        dec = self.single_direction(class_prediction, self.dec)
+
 
     def __repr__(self):
         print(f'encoder: {self.enc}')
         print(f'decoder: {self.dec}')
         return 'network'
-
-
-def train(args, model, device, train_loader, optimizer, epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-
-
-def test(args, model, device, test_loader):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
-            pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
-
-    test_loss /= len(test_loader.dataset)
-
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
-
-
-def main():
-    # Training settings
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                        help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
-                        help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                        help='number of epochs to train (default: 10)')
-    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
-                        help='learning rate (default: 0.01)')
-    parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
-                        help='SGD momentum (default: 0.5)')
-    parser.add_argument('--no-cuda', action='store_true', default=False,
-                        help='disables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    parser.add_argument('--log-interval', type=int, default=10, metavar='N',
-                        help='how many batches to wait before logging training status')
-
-    parser.add_argument('--save-model', action='store_true', default=False,
-                        help='For Saving the current Model')
-    args = parser.parse_args()
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-
-    torch.manual_seed(args.seed)
-
-    device = torch.device("cuda" if use_cuda else "cpu")
-
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,
-                           transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.test_batch_size, shuffle=True, **kwargs)
-
-
-
-    model = VAE(input_dim=).to(device)
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
-        test(args, model, device, test_loader)
-
-    if (args.save_model):
-        torch.save(model.state_dict(),"mnist_cnn.pt")
-
-if __name__ == '__main__':
-    main()
-
-
-#
-# if __name__ == '__main__':
-#
-#     data_loader = Loader()
-#     net = VAE(data_loader.length).double()
-#
-#     print(net)
-#     optimizer = optim.RMSprop(net.parameters(), lr=1e-3)
-#     epochs = 1
-#
-#     VAE.train()
-#
-#     for i in range(1, epochs + 1):
-#         for j, (x, _) in enumerate(data_loader):
-#             optimizer.zero_grad()
-#
-#             encoded = net.forward(x, net.enc)
-#             decoded = net.forward(encoded, net.dec)
-#
-#             loss = torch.abs(x - decoded)
-#
-#             loss.backward()
-#             optimizer.step()

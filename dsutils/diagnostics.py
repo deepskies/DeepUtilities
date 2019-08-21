@@ -18,6 +18,7 @@ from matplotlib.pyplot import cm
 import sklearn
 #import scikitplot as skplt
 import argparse
+import pandas as pd
 
 class Diagnostics(object):
     """
@@ -45,11 +46,24 @@ class Diagnostics(object):
     plt.rc('xtick.minor', size=6, pad=5)
     plt.rc('ytick.major', size=8, pad=8)
     plt.rc('ytick.minor', size=6, pad=5)
+
+
+    def check_for_array(arr, name):
+        if (not hasattr(arr, '__len__') and (not isinstance(arr, str))): raise Exception(name + " is not in the appropriate format. Should be an array")
+
+    def check_for_same_length(arr1, name1, arr2, name2):
+        if (not (len(arr1) == len(arr2))): raise Exception(name1 + " and " name2 + " are not tbe same length")
+
+    def check_for_dataframe(arr, name):
+         if (not isinstance(arr, pd.DataFrame)): raise Exception(name + " is not in the appropriate format. Should be a dataframe")
+
     
-    def __init__(self, actual, predicted, acc=0, loss=0, auc=0, feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
+    def __init__(self, actual, predicted, acc=[0,0], loss=[0.0], auc=[0,0], feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
         # Mandatory lists for diagnostics
         self.actual=actual
-        self.predicted=predicted 
+        self.predicted=predicted
+
+       check_for_array(self.actual, "Actual"); check_for_array(self.predicted, "Predicted"); check_for_same_length(self.actual, "Actual", self.predicted, "Predicted")
 
         # User-added lists for diagnostics
         self.acc=acc; self.loss=loss; self.auc = auc
@@ -90,12 +104,12 @@ class Diagnostics(object):
 
         if (norm):
             heatmap_value = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-            file_name = "Confusion_Matrix_Norm.jpeg"
+            file_name = "Confusion_Matrix_Norm.png"
             plt.title("Normalized Confusion Matrix", fontsize=18)
 
         else:
             heatmap_value = cm.astype('float')
-            file_name = "Confusion_Matrix.jpeg"
+            file_name = "Confusion_Matrix.png"
             plt.title("Confusion Matrix", fontsize=14)
 
         sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels, 
@@ -125,7 +139,10 @@ class Diagnostics(object):
         """
         num_graphs = len(name_plot)
         plot_name = ["Loss", "Accuracy", "AUC"]
-        metrics = np.array([(self.loss[0], self.loss[1]), (self.acc[0], self.acc[1]), (self.auc[0], self.auc[1])])
+        try:
+            metrics = np.array([(self.loss[0], self.loss[1]), (self.acc[0], self.acc[1]), (self.auc[0], self.auc[1])])
+        except:
+            raise Excpetion("Inputs for any or all of loss, acc, auc are not properly formatted. Please input lists of with [train, test]")
 
         # if you want to plot individual metrics
         if save_individual:
@@ -134,6 +151,8 @@ class Diagnostics(object):
                 plt.figure(figsize=figsize)
                 metric_train = metrics[i][0]
                 metric_val =metrics[i][1]
+
+                check_for_array(metric_train, plot_name[i] + " Train"); check_for_array(metric_val, plot_name[i] + " Validation")
                 
                 plt.plot(metric_train, '-', color='seagreen', label='Training')
                 plt.plot(metric_val, '--', color='blue', label='Validation')
@@ -143,6 +162,7 @@ class Diagnostics(object):
                 plt.ylabel(plot_name[i], fontsize=14)
                 plt.savefig(plot_name[i] + ".png", bbox_inches='tight')
                 if (show): plt.show()
+                plt.close()
                     
         # if you want to plot metrics as subplots in one figure
         else:
@@ -150,6 +170,8 @@ class Diagnostics(object):
             for i in range(num_graphs):
                 metric_train = metrics[i][0]
                 metric_val = metrics[i][1]
+
+                check_for_array(metric_train, plot_name[i] + " Train"); check_for_array(metric_val, plot_name[i] + " Validation")
 
                 axes[i].plot(metric_train, '-', color='seagreen', label='Training')
                 axes[i].plot(metric_val, '--', color='blue', label='Validation')
@@ -165,18 +187,19 @@ class Diagnostics(object):
                 fig.savefig(figname, bbox_inches='tight')
                 
                 if (show): fig.show()
-                #plt.close()
+            plt.close()
     
     # need to fix this function
     def plot_cross_validation(self, figsize = (6, 4), show=True):
-        file_name = "K_fold_Cross_Validation.jpeg"
+        file_name = "K_fold_Cross_Validation.png"
+        check_for_array(self.cross_val, "Cross_Val")
         plt.figure(figsize=figsize)
         plt.tile("K-fold Cross Validation", fontsize=14)
         plt.yticks(fontsize=14)
         plt.xticks(fontsize=14)
         plt.ylabel("Folds", fontsize=14)
         plt.xlabel("Accuracy", fontsize=14)
-        plt.plot(self.loss)
+        plt.plot(self.cross_val)
         plt.savefig(file_name)
         if (show): plt.show()
         plt.close()
@@ -198,31 +221,60 @@ class Diagnostics(object):
         plt.close()
                                           
     
-    def residual_dist_by_feature(self, figsize = (6,8), target='Target', hex_bin=False, show=True):
-        file_name = '{}_errors_by_feature.pdf'.format(target)
-        #Calculate residuals as fractional error.
-        error=2*(self.predicted-self.actual)/(abs(self.actual)+abs(self.predicted))
+    def residual_dist_by_feature(self, figsize = (6,8), target='Target', hex_bin=False, show=True, save_individual=False):
+        """
+        Plots fractional residual as a function of each feature
+        There is one plot for each feature
+        Inputs:
+            - hex_bin = False - makes a scatter plot
+            - hex_bin = True - makes a hexbin plot with a colormap based on number points
+            - Target - name of the quantity that you're trying to predict
+            - save_individual - can save feature graphs as multiple images or as single image
+        """
+        check_for_dataframe(self.feature_lists, "Feature List")
         num_features=len(self.feature_list.columns); figure_width, figure_height = figsize
-        fig=plt.figure(figsize=(figure_width, figure_height*num_features))
-        for i in range(0, num_features):
-            ax = fig.add_subplot(num_features, 1, i+1)
-            #Plot the errors vs. feature.
-            if hex_bin==True:
-                ax.hexbin(feature_list[feature_list.columns[i]],error, bins='log')
-            else:
-                ax.plot(feature_list[feature_list.columns[i]],error, '.', alpha=0.2)
-            ax.set_xlabel(feature_list.columns[i], fontsize=14)
-            ax.set_ylabel('Fractional Error', fontsize=14)
-            plt.rc('xtick',labelsize=14)
-            plt.rc('ytick',labelsize=14)
-            ax.set_title('Fractional Error as a function of {}'.format(feature_list.columns[i]), fontsize=14)
-            extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            plt.savefig(file_name, bbox_inches=extent)
-        if (show): fig.show()
-        fig.close()
+        error=2*(self.predicted-self.actual)/(abs(self.actual)+abs(self.predicted)) #Fractional error constructed to deal with the case of actual being 0
+        plt.rc('xtick',labelsize=14)
+        plt.rc('ytick',labelsize=14)
+
+        if (save_invdividual):
+            for i in range(0, num_features):
+                plt.figure(figsize=figsize)
+                plt.set_xlabel(feature_list.columns[i], fontsize=14)
+                plt.set_ylabel('Fractional Error', fontsize=14)
+                plt.set_title('Fractional Error as a function of {}'.format(feature_list.columns[i]), fontsize=14)
+                if hex_bin==True:
+                    plt.hexbin(feature_list[feature_list.columns[i]],error, bins='log')
+                else:
+                    plt.plot(feature_list[feature_list.columns[i]],error, '.', alpha=0.2)
+                plt.savefig('Fractional_Error_as_a_function_of_{}.png'.format(feature_list.columns[i]))
+                if (show): plt.show()
+                plt.close()
+
+        if (not save_individual):
+            file_name = '{}_errors_by_feature.pdf'.format(target)
+            fig=plt.figure(figsize=(figure_width, figure_height*num_features))
+            for i in range(0, num_features):
+                ax = fig.add_subplot(num_features, 1, i+1)
+                #Plot the errors vs. feature.
+                if hex_bin==True:
+                    ax.hexbin(feature_list[feature_list.columns[i]],error, bins='log')
+                else:
+                    ax.plot(feature_list[feature_list.columns[i]],error, '.', alpha=0.2)
+                ax.set_xlabel(feature_list.columns[i], fontsize=14)
+                ax.set_ylabel('Fractional Error', fontsize=14)
+                ax.set_title('Fractional Error as a function of {}'.format(feature_list.columns[i]), fontsize=14)
+            if (show): fig.show()
+            plt.close()
     
     
     def one_to_one_plot(self, target_name='Target', axis_scale='linear', show=True):
+        """
+        Plots actual vs predicted values
+        Inputs:
+            - axis_scale = default is linear, but can choose any sort of axis scale
+        """
+
         file_name = '{}_One_to_One.pdf'.format(target_name)
         plt.plot(self.actual, self.predicted, '.')
         plt.yticks(fontsize=14)
@@ -240,6 +292,14 @@ class Diagnostics(object):
     
     
     def target_distributions(self, figsize=(6, 4), target='Target', x_scale='linear', y_scale='linear', show=True):
+        """
+        Plots a histogram of two distributions, one for the predcited values and one for the actual values
+        Inputs:
+            - Target - name of the quantity that you're trying to predict
+            - x_scale - default is linear, but can choose any sort of axis scale
+            - y_scale - default is linear, but can choose any sort of axis scale
+        """
+
         file_name = '{}_distributions.pdf'.format(target)
         # Assign colors for each group and the names
         colors = ['#E69F00', '#56B4E9']
@@ -273,6 +333,8 @@ class Diagnostics(object):
           - filename: string, saved filename
           - show: boolean, whether you want to plt.show() your figure or just save it to your computer  
         """
+
+        check_for_array(self.data, "Data batch"); check_for_array(self.labels_batch, "Label batch")
 
         plt.figure(figsize=figsize)
         
