@@ -11,17 +11,18 @@ import dsutils as ds
 # from dsutils.auto import run_epoch
 from dsutils.auto import shape
 
-'''
-This network is defined recursively.
-|layers| ~ log_2(input_dim)
-'''
 class VAE(nn.Module):
-    def __init__(self, input_dim, output_dim, classify=True, layer_type='mlp'):
-        super(VAE, self).__init__()
+    '''
+    This network is defined recursively.
+    |layers| ~ log_n(input_dim)
 
+    output dim is bottleneck layer size
+    '''
+    def __init__(self, input_dim, output_dim, classify=True, layer_type='mlp', factor=2):
+        super(VAE, self).__init__()
         if layer_type == 'mlp':
             # whats better, this:
-            self.enc, self.dec = shape.mlp_vae(shape.log_dims(input_dim, output_dim))
+            self.enc, self.dec = shape.mlp_vae(shape.log_dims(input_dim, output_dim, factor))
             # or this: (getting rid of shape.mlp_vae)
             # self.dims = shape.log_dims(input_dim, output_dim)
             # self.enc = nn.ModuleList(shape.mlp_layers(self.dims))

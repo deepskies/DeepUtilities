@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def log_dims(input_dim, output_dim, factor=2):
+def log_dims(input_dim=784, output_dim=10, factor=2):
     '''
     mnist mlp w factor 2:
     [784, 397, 203, 106, 58, 34, 22, 16, 13, 11, 10]
@@ -21,17 +21,6 @@ def log_dims(input_dim, output_dim, factor=2):
     dims.append(output_dim)
     print(dims)
     return dims
-
-# def tuple_dims(dims):
-#     dims_len = len(dims)
-#     cur = dims[0]
-#     prev = cur
-#
-#     tuples = []
-#     for i in range(dims_len):
-#         if i == dims_len - 1:
-#             break
-#         tuples.append(dims[i], dims[i + 1])
 
 def get_layers(layer_dims, layer_type):
     layers = []
@@ -74,7 +63,6 @@ def get_ksizes(delta):
         ksizes.append(ksize)
 
     return ksizes
-
 
 def conv1d_layers(x, ksizes, max_channels=64):
     in_dim = x.dim()
