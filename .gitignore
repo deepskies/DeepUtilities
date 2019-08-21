@@ -5,4 +5,11 @@
 experiments/
 data/
 
+.DS_Store
+.ipynb_checkpoints/
+
+*.png
+*/*.png
+*/*/*.png
+
 dsutils.egg-info/
