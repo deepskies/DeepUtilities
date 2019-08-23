@@ -13,3 +13,5 @@ data/
 */*/*.png
 
 dsutils.egg-info/
+
+docs/build/

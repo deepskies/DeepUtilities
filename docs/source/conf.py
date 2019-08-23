@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'dsutils'
+project = 'Deep Skies Utils'
 copyright = '2019, Deep Skies Lab'
 author = 'Deep Skies Lab'
 
