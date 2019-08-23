@@ -7,6 +7,7 @@ Deep Skies Utilities for IO, Pre-Processing, Training, and Diagnostics
 # no link [plotting/diagnostics]()`
 
 end goal:
+
 ```
 import dsutils as ds
 
@@ -14,6 +15,7 @@ data = ds.get_dataset('strong_lens', scale=False)  # have option for scaling
 
 # run baseline models, save model and plots
 ds.baselines(data, save=True, plots=True)
+
 ```
 
 Adding the option to pass a package ambiguous architecture as well as an actual model instantiation would be good to have.
