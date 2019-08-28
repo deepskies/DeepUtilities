@@ -10,7 +10,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch, log_interval
 
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
-        data = data.view(batch_size, -1)
+        data = data.view(batch_size, -1)  # todo remove flatten
 
         optimizer.zero_grad()
         output = model(data)
