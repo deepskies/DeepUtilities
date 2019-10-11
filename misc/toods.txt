@@ -1,6 +1,6 @@
+TODO LIST
 
-
-
+Pipeline overview
 1. IO
 2. Preproc
 3. Train
@@ -9,18 +9,19 @@
 There is a lot to do!!
 
 Crucial adds:
-* tensorflow nn support 
+* tensorflow nn support
   - need to make a call if we want to only support tf2
 * largely improve the interface with the cloud and running jobs on cloud (gcloud rn)
   - docker, kubernetes, kubeflow, gcloud storage, etc
-* 
+* documentation
 
+Less crucial:
+* styling
+*
 
 
 
 lists of resources and relevant packages/tools:
 1. onnx - open nn exchange (this will be great for sharing w the broader academic community) - built in pytorch support
 2. tensorflow extended (tfx)
-3. 
-
-
+3.
