@@ -57,7 +57,7 @@ class Diagnostics(object):
         if (not hasattr(arr, '__len__') and (not isinstance(arr, str))): raise Exception(name + " is not in the appropriate format. Should be an array")
 
     def check_for_same_length(arr1, name1, arr2, name2):
-        if (not (len(arr1) == len(arr2))): raise Exception(name1 + " and " name2 + " are not tbe same length")
+        if (not (len(arr1) == len(arr2))): raise Exception(name1 + " and " + name2 + " are not the same length")
 
     def check_for_dataframe(arr, name):
          if (not isinstance(arr, pd.DataFrame)): raise Exception(name + " is not in the appropriate format. Should be a dataframe")
@@ -202,7 +202,7 @@ class Diagnostics(object):
     # need to fix this function
     def plot_cross_validation(self, figsize = (6, 4), show=True):
         fn = self.plot_path("K_fold_Cross_Validation.png")
-            plt.close()
+        plt.close()
 
     # need to fix this function
     def plot_cross_validation(self, figsize = (6, 4), show=True):
