@@ -1,0 +1,18 @@
+{
+    "id": "config_test_1",
+    "dataset": "mnist",
+    "device": "cpu",
+    "model_configs": [
+        {
+        "type": "automlp",
+        "factor": 5
+    }],
+    "training_config": {
+        "batch_size": 256,
+        "record_freq": 10,
+        "print_freq": 500,
+        "epochs": 20,
+        "lr": 1E-3,
+        "classify": true
+    }
+}
