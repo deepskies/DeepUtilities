@@ -5,14 +5,27 @@
     "model_configs": [
         {
         "type": "automlp",
-        "factor": 5
-    }],
-    "training_config": {
-        "batch_size": 1,
-        "record_freq": 10,
-        "print_freq": 500,
-        "epochs": 1,
+        "factor": 5,
+        "classify": true,
         "lr": 1E-3,
-        "classify": true
+        "epochs": 2,
+        "activation_fxn": "tanh"
+    },
+        {
+        "type": "vae",
+        "layer_type": "mlp",
+        "factor": 5,
+        "classify": true,
+        "num_classes": 10,
+        "activation_fxn": "tanh",
+        "lr": 1E-3,
+        "epochs": 1
+        }
+    ],
+    "training_config": {
+        "batch_size": 100,
+        "test_batch_size": 1000,
+        "record_freq": 1,
+        "print_freq": 1
     }
 }

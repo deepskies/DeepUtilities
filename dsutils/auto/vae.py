@@ -18,23 +18,21 @@ class VAE(nn.Module):
 
     output dim is bottleneck layer size
     '''
-    def __init__(self, input_dim, output_dim, classify=True, layer_type='mlp', factor=2):
+    def __init__(self, input_dim, output_dim, config):
         super(VAE, self).__init__()
+        layer_type = config['layer_type']
         if layer_type == 'mlp':
-            # whats better, this:
-            self.enc, self.dec = shape.mlp_vae(shape.log_dims(input_dim, output_dim, factor))
-            # or this: (getting rid of shape.mlp_vae)
-            # self.dims = shape.log_dims(input_dim, output_dim)
-            # self.enc = nn.ModuleList(shape.mlp_layers(self.dims))
-            # self.dec = nn.ModuleList(shape.mlp_layers(self.dims[::-1]))
+            self.dims = shape.log_dims(input_dim, output_dim)
+            self.enc = nn.ModuleList(shape.mlp_layers(self.dims))
+            self.dec = nn.ModuleList(shape.mlp_layers(self.dims[::-1]))
         else:
-            raise NotImplementedError("this layer time not supported yet")
+            raise NotImplementedError("this layer type not supported yet")
 
     def single_direction(self, x, direction):
         # directions: encoding and decoding
         for layer in direction:
-            # if i == self.num_layers - 1 and :
-            #     x = F.softmax(layer(x), dim=1)
+            if i == self.num_layers - 1:
+                x = F.softmax(layer(x), dim=1)
                 # break
             x = torch.tanh(layer(x))
         return x
