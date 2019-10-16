@@ -34,10 +34,6 @@ def train(train_loader, optimizer, config):
             preds.append(pred)
 
 
-    train_acc = 100. * correct / len(train_loader.dataset)
-    logs['train_acc'].append(train_acc)
-    # return preds, targets
-
 def test(test_loader, config):
     model, device, loss_fxn, epoch, print_freq, logs = config.values()
     model.eval()
@@ -65,28 +61,11 @@ def test(test_loader, config):
             if i % print_freq == 0:
                 print(f'epoch: {epoch}, batch: {i}, test_loss: {batch_loss}, acc: {batch_acc}/{batch_size}')
 
-
             preds += output.tolist()
             actuals += target.tolist()
 
-    # log_act = torch.cat(actuals, 0).numpy()
-    # log_preds = torch.cat(preds, 0).numpy()
-    # print(actuals)
-    # print(preds)
-    # print(log_act)
     logs['actual'] += actuals
     logs['predicted'] += preds
-
-    test_loss /= len(test_loader.dataset)
-    test_acc = 100. * correct / len(test_loader.dataset)
-
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        test_acc))
-
-    logs['test_acc'].append(test_acc)
-
-
 
 # hacky garbo solution
 def vae_train(train_loader, optimizer, config):

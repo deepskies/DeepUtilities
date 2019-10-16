@@ -4,7 +4,7 @@
 
 experiments/
 data/
-conifg/
+config/
 
 .DS_Store
 .ipynb_checkpoints/

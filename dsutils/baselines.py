@@ -63,9 +63,6 @@ class Baselines:
         self.logs = {
                         'actual' : [],
                         'predicted' : [],
-
-                        'train_acc' : [],
-                        'test_acc' : []
                     }
 
         # for now returns pytorch train_loader, test_loader
@@ -112,7 +109,6 @@ class Baselines:
                 }
 
                 run_epoch.train(self.train_loader, self.optimizer, run_config)
-
                 run_epoch.test(self.test_loader, run_config)
 
             torch.save(self.model, self.dir + "/model.pt")
