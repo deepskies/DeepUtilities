@@ -46,6 +46,7 @@ class Baselines:
         dataset = config['dataset']
         timestamp = time.strftime("%Y-%m-%d_%H-%M")
         self.dir = "./experiments/{}_{}_{}".format(dataset, timestamp, config["id"])
+
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
 
@@ -111,7 +112,8 @@ class Baselines:
                 run_epoch.train(self.train_loader, self.optimizer, run_config)
                 run_epoch.test(self.test_loader, run_config)
 
-            torch.save(self.model, self.dir + "/model.pt")
+        torch.save(self.model, self.dir + "/model.pt")
+
 
         self.diags = diag.Diagnostics(self.dir, self.logs['predicted'], self.logs['actual'])
 
