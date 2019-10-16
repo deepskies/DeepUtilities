@@ -1,0 +1,1 @@
+datasets = ['mnist', 'cifar10']
