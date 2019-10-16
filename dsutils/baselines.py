@@ -43,13 +43,13 @@ class Baselines:
             config = json.load(config_file)
 
         timestamp = time.strftime("%Y-%m-%d_%H-%M")
-        directory = "./experiments/img_results_{}_{}".format(timestamp, config["id"])
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        self.dir = "./experiments/img_results_{}_{}".format(timestamp, config["id"])
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
 
         # Save config file in experiment directory
         # disabled for now
-        # with open(directory + '/config.json', 'w') as config_file:
+        # with open(self.dir + '/config.json', 'w') as config_file:
         #     json.dump(config, config_file)
 
         self.model = None
@@ -93,6 +93,7 @@ class Baselines:
                     run_epoch.train(self.model, self.device, self.train_loader, self.optimizer, self.criterion, epoch_id, self.log_interval, self.logs)
                     run_epoch.test(self.model, self.device, self.test_loader, self.criterion, self.logs)
 
+                torch.save(self.model, self.dir + "model.pt")
 
         self.diags = diag.Diagnostics(self.path, self.logs['actual'], self.logs['predicted'])
 

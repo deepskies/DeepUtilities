@@ -8,10 +8,10 @@
         "factor": 5
     }],
     "training_config": {
-        "batch_size": 256,
+        "batch_size": 1,
         "record_freq": 10,
         "print_freq": 500,
-        "epochs": 20,
+        "epochs": 1,
         "lr": 1E-3,
         "classify": true
     }
