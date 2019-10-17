@@ -115,7 +115,7 @@ class Baselines:
         torch.save(self.model, self.dir + "/model.pt")
 
 
-        self.diags = diag.Diagnostics(self.dir, self.logs['predicted'], self.logs['actual'])
+        self.diags = diag.Diagnostics(config, self.dir, self.logs['predicted'], self.logs['actual'])
 
         self.diags.plot_cm()
 

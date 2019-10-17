@@ -57,15 +57,17 @@ class Diagnostics(object):
          if (not isinstance(arr, pd.DataFrame)): raise Exception(name + " is not in the appropriate format. Should be a dataframe")
 
 
-    def __init__(self, path, predicted, actual, acc=[0,0], loss=[0.0], auc=[0,0], feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
+    def __init__(self, config, path, predicted, actual, acc=[0,0], loss=[0.0], auc=[0,0], feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
         # Mandatory lists for diagnostics
         self.actual = actual
         self.predicted = predicted
         self.path = path + '/plots/'
         if not os.path.exists(self.path):
             os.makedirs(self.path)
-        print(self.actual)
-        print(self.predicted)
+
+        plot_config = config['plot_config']
+        self.show = plot_config['show']
+        self.save = plot_config['save']
 
         # User-added lists for diagnostics
         self.acc=acc
@@ -76,64 +78,7 @@ class Diagnostics(object):
         self.data = data_batch
         self.labels_batch = labels_batch
 
-    def convert_to_index(self, array_categorical):
-        array_index = [np.argmax(array_temp) for array_temp in array_categorical]
-        return array_index
 
-    # Plots confusion matrix. If norm is set, values are between 0-1. Shows figure if show is set
-    def plot_cm(self, figsize = (6, 4), norm=True, show=True):
-        """
-        Creates a confusion matrix for the predicted and actual labels for your model
-
-        Input:
-           - figsize: tuple, the figure size of the desired plot
-           - norm: boolean, whether or not you want your confusion matrix normalized (between 0-1)
-           - show: boolean, whether you want to plt.show() your figure or just save it to your computer
-        """
-        #if self.actual == None or self.predicted == None:
-            #raise NameError("Missing either actual predicted labels")
-
-        #if (len(self.actual) != len(self.predicted)):
-            #raise NameError("Predicted and actual labels must be same shape")
-
-        #converting raw labels into a 1D list
-
-        # actual_lbl = self.convert_to_index(self.actual)
-        pred_lbl = self.convert_to_index(self.predicted)
-
-        cm=confusion_matrix(self.actual, pred_lbl)
-        plt.figure(figsize=figsize)
-        labels = np.unique(pred_lbl).tolist()
-        np.set_printoptions(precision=2)
-        print(cm)
-
-        if norm:
-            a = cm.sum(axis=1)[:, np.newaxis]
-            b = cm.astype("float")
-
-            # print(f'cm sum: {a}')
-            # print(f'cm.astype: {b}')
-
-            heatmap_value = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-            file_name = self.plot_path("Confusion_Matrix_Norm.png")
-            plt.title("Normalized Confusion Matrix", fontsize=18)
-        else:
-            heatmap_value = cm.astype('float')
-            file_name = self.plot_path("Confusion_Matrix.png")
-            plt.title("Confusion Matrix", fontsize=14)
-        print(labels)
-        print(heatmap_value)
-        sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels,
-                   cmap="Blues", annot_kws={"size": 10}, fmt='.2f')
-
-        plt.yticks(fontsize=14)
-        plt.xticks(fontsize=14)
-        plt.ylabel("True Label", fontsize=14)
-        plt.xlabel("Predicted Label", fontsize=14)
-
-        plt.savefig(file_name, bbox_inches='tight')
-        if show: plt.show()
-        plt.close()
 
 
     def plot_metrics_per_epoch(self, figsize = (15, 4), name_plot=[0,1,2], figname="metrics.png", show=True, save_individual=False):
@@ -447,3 +392,66 @@ class Diagnostics(object):
 
     def plot_path(self, plot_name):
         return self.path + plot_name
+
+
+def convert_to_index(array_categorical):
+    array_index = [np.argmax(array_temp) for array_temp in array_categorical]
+    return array_index
+
+# Plots confusion matrix. If norm is set, values are between 0-1. Shows figure if show is set
+def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save=True, dir=None):
+    """
+    Creates a confusion matrix for the predicted and actual labels for your model
+
+    Input:
+       - predicted
+       - actual
+       - figsize: tuple, the figure size of the desired plot
+       - norm: boolean, whether or not you want your confusion matrix normalized (between 0-1)
+       - show: boolean, whether you want to plt.show() your figure or just save it to your computer
+       - save
+    """
+    if actual == None or predicted == None:
+        raise NameError("Missing either actual predicted labels")
+
+    if (len(actual) != len(predicted)):
+        raise NameError("Predicted and actual labels must be same shape")
+
+    #converting raw labels into a 1D list
+
+    # actual_lbl = convert_to_index(self.actual)
+    pred_lbl = convert_to_index(predicted)
+
+    cm = confusion_matrix(actual, pred_lbl)
+    plt.figure(figsize=figsize)
+    labels = np.unique(pred_lbl).tolist()
+    np.set_printoptions(precision=2)
+
+    if norm:
+        a = cm.sum(axis=1)[:, np.newaxis]
+        b = cm.astype("float")
+
+        # print(f'cm sum: {a}')
+        # print(f'cm.astype: {b}')
+
+        heatmap_value = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        file_name = self.plot_path("Confusion_Matrix_Norm.png")
+        plt.title("Normalized Confusion Matrix", fontsize=18)
+    else:
+        heatmap_value = cm.astype('float')
+        file_name = self.plot_path("Confusion_Matrix.png")
+        plt.title("Confusion Matrix", fontsize=14)
+
+    sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels,
+               cmap="Blues", annot_kws={"size": 10}, fmt='.2f')
+
+    plt.yticks(fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.ylabel("True Label", fontsize=14)
+    plt.xlabel("Predicted Label", fontsize=14)
+    if save:
+        save_path = dir + file_name
+        plt.savefig(file_name, bbox_inches='tight')
+
+    if show: plt.show()
+    plt.close()
