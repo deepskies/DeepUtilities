@@ -78,9 +78,6 @@ class Diagnostics(object):
         self.data = data_batch
         self.labels_batch = labels_batch
 
-
-
-
     def plot_metrics_per_epoch(self, figsize = (15, 4), name_plot=[0,1,2], figname="metrics.png", show=True, save_individual=False):
         """
         Plots accuracy, loss, and auc curves per epoch
@@ -399,7 +396,7 @@ def convert_to_index(array_categorical):
     return array_index
 
 # Plots confusion matrix. If norm is set, values are between 0-1. Shows figure if show is set
-def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save=True, dir=None):
+def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save_path=None, config=None):
     """
     Creates a confusion matrix for the predicted and actual labels for your model
 
@@ -435,11 +432,11 @@ def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save=True
         # print(f'cm.astype: {b}')
 
         heatmap_value = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        file_name = self.plot_path("Confusion_Matrix_Norm.png")
+        file_name = "Confusion_Matrix_Norm.png"
         plt.title("Normalized Confusion Matrix", fontsize=18)
     else:
         heatmap_value = cm.astype('float')
-        file_name = self.plot_path("Confusion_Matrix.png")
+        file_name = "Confusion_Matrix.png"
         plt.title("Confusion Matrix", fontsize=14)
 
     sn.heatmap(heatmap_value, annot=True, xticklabels=labels, yticklabels=labels,
@@ -449,9 +446,9 @@ def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save=True
     plt.xticks(fontsize=14)
     plt.ylabel("True Label", fontsize=14)
     plt.xlabel("Predicted Label", fontsize=14)
-    if save:
-        save_path = dir + file_name
-        plt.savefig(file_name, bbox_inches='tight')
+    if save_path:
+        full_path = save_path + file_name
+        plt.savefig(full_path, bbox_inches='tight')
 
     if show: plt.show()
     plt.close()

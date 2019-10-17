@@ -41,11 +41,11 @@ class Baselines:
         # dataset='mnist', model='mlp', epochs=1, lr=1e-3, classify=True, log_interval=500, factor=5
         # todo: logging for diagnostics
         with open(path_to_config) as config_file:
-            config = json.load(config_file)
+            self.config = json.load(config_file)
 
-        dataset = config['dataset']
+        dataset = self.config['dataset']
         timestamp = time.strftime("%Y-%m-%d_%H-%M")
-        self.dir = "./experiments/{}_{}_{}".format(dataset, timestamp, config["id"])
+        self.dir = "./experiments/{}_{}_{}".format(dataset, timestamp, self.config["id"])
 
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
@@ -57,8 +57,8 @@ class Baselines:
 
         self.model = None
 
-        self.model_configs = config['model_configs']
-        self.training_config = config['training_config']
+        self.model_configs = self.config['model_configs']
+        self.training_config = self.config['training_config']
 
         self.print_freq = self.training_config['print_freq']
         self.logs = {
@@ -68,12 +68,12 @@ class Baselines:
 
         # for now returns pytorch train_loader, test_loader
         if dataset in m.datasets:
-            self.train_loader, self.test_loader = ds.get_dataset(dataset, config)
+            self.train_loader, self.test_loader = ds.get_dataset(dataset, self.config)
             self.in_dim, self.out_dim = 784, 10
         else:
             pass
 
-        self.device = config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         self.run()
 
@@ -115,9 +115,10 @@ class Baselines:
         torch.save(self.model, self.dir + "/model.pt")
 
 
-        self.diags = diag.Diagnostics(config, self.dir, self.logs['predicted'], self.logs['actual'])
-
-        self.diags.plot_cm()
+        # self.diags = diag.Diagnostics()
+        print(f'pred shape = {len(self.logs["predicted"])}')
+        print(f'pred actual= {len(self.logs["actual"])}')
+        diag.plot_cm(self.logs['predicted'], self.logs['actual'], config=self.config, save_path=self.dir)
 
 
 
