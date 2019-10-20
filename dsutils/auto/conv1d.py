@@ -11,6 +11,8 @@ import numpy as np
 
 import dsutils as ds
 
+from cosmoNODE.loaders import Anode as A
+
 '''
 The following program is a 1D convolutional neural network
 that defines the kernel_size recursively.
@@ -24,8 +26,8 @@ This is problematic and needs to be fixed.
 '''
 
 class Conv1DNet(nn.Module):
+    def __init__(self, input_dim=784, output_dim=10, batching_size=16):
         super(Conv1DNet, self).__init__()
-        def __init__(self, input_dim=784, output_dim=10, batching_size=16):
         self.in_dim = input_dim
         self.out_dim = output_dim
         self.batching_size = batching_size
@@ -83,9 +85,7 @@ class Conv2DNet(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-
-
-if __name__ == '__main__':
+def main():
     # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     epochs = 2
 
@@ -162,3 +162,8 @@ if __name__ == '__main__':
     # torch.save(net.state_dict(), './demos/baselines/saved_models/conv_classify.pt')
     # print(losses)
     torch.save(net.state_dict(), './demos/baselines/saved_models/conv_classify.pt')
+
+
+
+if __name__ == '__main__':
+    main()
