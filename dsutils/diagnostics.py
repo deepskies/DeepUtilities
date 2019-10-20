@@ -396,7 +396,7 @@ def convert_to_index(array_categorical):
     return array_index
 
 # Plots confusion matrix. If norm is set, values are between 0-1. Shows figure if show is set
-def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save_path=None, config=None):
+def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save_path=None, config=None, epoch=None):
     """
     Creates a confusion matrix for the predicted and actual labels for your model
 
@@ -414,8 +414,11 @@ def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save_path
     if (len(actual) != len(predicted)):
         raise NameError("Predicted and actual labels must be same shape")
 
-    #converting raw labels into a 1D list
+    if config:
+        plot_config = config.get('plot_config')
+        show = plot_config.get('show')
 
+    #converting raw labels into a 1D list
     # actual_lbl = convert_to_index(self.actual)
     pred_lbl = convert_to_index(predicted)
 
@@ -432,7 +435,10 @@ def plot_cm(predicted, actual, figsize = (6, 4), norm=True, show=True, save_path
         # print(f'cm.astype: {b}')
 
         heatmap_value = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        file_name = "Confusion_Matrix_Norm.png"
+        if epoch:
+            file_name = f"Confusion_Matrix_Norm_{epoch}.png"
+        else:
+            file_name = "Confusion_Matrix_Norm.png"
         plt.title("Normalized Confusion Matrix", fontsize=18)
     else:
         heatmap_value = cm.astype('float')

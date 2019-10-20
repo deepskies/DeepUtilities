@@ -1,32 +1,32 @@
 {
     "id": "config_test_1",
     "dataset": "cifar10",
-    "device": "cpu",
+    "device": "gpu",
     "model_configs": [
-        {
-        "type": "automlp",
-        "factor": 5,
-        "classify": true,
-        "lr": 1E-3,
-        "epochs": 2,
-        "activation_fxn": "tanh"
-    },
         {
         "type": "vae",
         "layer_type": "mlp",
-        "factor": 5,
+        "factor": 10,
         "classify": true,
         "num_classes": 10,
         "activation_fxn": "tanh",
         "lr": 1E-3,
         "epochs": 1
-        }
+    },
+        {
+        "type": "automlp",
+        "factor": 5,
+        "classify": true,
+        "lr": 1E-3,
+        "epochs": 10,
+        "activation_fxn": "tanh"
+    }
     ],
     "training_config": {
-        "batch_size": 100,
+        "batch_size": 1000,
         "test_batch_size": 1000,
         "record_freq": 1,
-        "print_freq": 1
+        "print_freq": 100
     },
     "plot_config": {
         "show": false,

@@ -30,15 +30,17 @@ class VAE(nn.Module):
             self.classify = False
 
         if layer_type == 'mlp':
-            self.dims = shape.log_dims(input_dim, output_dim)
+            factor = config['factor']
+            self.dims = shape.log_dims(input_dim, output_dim, factor=factor)
             self.enc = nn.ModuleList(shape.mlp_layers(self.dims))
             self.dec = nn.ModuleList(shape.mlp_layers(self.dims[::-1]))
         else:
             raise NotImplementedError("this layer type not supported yet")
+        self.num_layers = len(self.dims)
 
     def single_direction(self, x, direction):
         # directions: encoding and decoding
-        for layer in direction:
+        for i, layer in enumerate(direction):
             if i == self.num_layers - 1:
                 if self.classify:
                     x = F.softmax(layer(x), dim=1)
@@ -48,11 +50,10 @@ class VAE(nn.Module):
             x = torch.tanh(layer(x))
         return x
 
-
     def forward(self, x):
         class_prediction = self.single_direction(x, self.enc)
         dec = self.single_direction(class_prediction, self.dec)
-        return
+        return class_prediction, dec
 
     def __repr__(self):
         print(f'encoder: {self.enc}')

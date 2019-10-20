@@ -60,6 +60,7 @@ class Baselines:
         # disabled for now
         # with open(self.dir + '/config.json', 'w') as config_file:
         #     json.dump(config, config_file)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         self.model = None
         self.run_configs = []  # to build
@@ -74,11 +75,9 @@ class Baselines:
         self.train_loader, self.test_loader = get_dataloaders(dataset, self.config)
         self.in_dim = self.train_loader.dataset[0][0].numel()
         self.out_dim = 10
-        self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        # self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         self.run()
-
-
 
     def read_config(self):
         # major todo
@@ -107,7 +106,10 @@ class Baselines:
                 optimizer = optim.Adam(model.parameters(), lr=lr)
 
             if model_type == 'vae':
-                break
+                factor = model_config['factor']
+                model = vae.VAE(self.in_dim, self.out_dim, config=model_config).to(self.device)
+                optimizer = optim.Adam(model.parameters(), lr=lr)
+
 
             run_config = {
                 'model': model,
@@ -126,11 +128,17 @@ class Baselines:
         run_log = {}
         for i, run_config in enumerate(self.run_configs):
             logs_for_all_epochs = []
-
+            model_type = self.model_configs[i]['type']
             for epoch in range(run_config['epochs']):
-                train.single_epoch(self.train_loader, run_config, epoch)
-                epoch_log = test.test(self.test_loader, run_config, epoch)
-                logs_for_all_epochs.append(epoch_log)
+                # if its an unsupervised model
+                if model_type == 'vae' or model_type == 'gan':
+                    train.vae_train(self.train_loader, run_config, epoch)
+                    epoch_log = test.vae_test(self.test_loader, run_config, epoch)
+                    pass
+                else:
+                    train.single_epoch(self.train_loader, run_config, epoch)
+                    epoch_log = test.test(self.test_loader, run_config, epoch)
+                    logs_for_all_epochs.append(epoch_log)
 
             run_log[i] = logs_for_all_epochs
 
@@ -141,7 +149,13 @@ class Baselines:
 
         # self.diags = diag.Diagnostics()
         n = len(self.run_configs)
-        diag.plot_cm(run_log[n-1][0]['predicted'], run_log[n-1][0]['actual'], config=self.config, save_path=self.dir)
+        # plots last epoch
+
+        for k, v in run_log.items():
+            run_num = k
+            preds = v[0]
+            acts = v[1]
+            diag.plot_cm(preds, acts, save_path=self.dir, show=False, epoch=run_num)
 
 def read_json(path):
     with open(path) as config_file:
