@@ -14,9 +14,8 @@
         {
         "type": "vae",
         "layer_type": "mlp",
-        "factor": 5,
-        "classify": true,
-        "num_classes": 10,
+        "factor": 10,
+        "classify": false,
         "activation_fxn": "tanh",
         "lr": 1E-3,
         "epochs": 1

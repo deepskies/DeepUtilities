@@ -1,8 +1,10 @@
+import argparse
+import sys
 import os.path
 import json
 import time
 
-import h5py
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -76,7 +78,7 @@ class Baselines:
         self.in_dim = self.train_loader.dataset[0][0].numel()
         self.out_dim = 10
         # self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
+        self.log = []
         self.run()
 
     def read_config(self):
@@ -87,7 +89,7 @@ class Baselines:
     def prep_models(self):
         # builds and configures the model for train and test, builds a
         self.run_configs = []
-        for i, model_config in enumerate(self.model_configs):
+        for model_config in self.model_configs:
 
             model_type = model_config['type']
             lr = model_config['lr']
@@ -101,12 +103,10 @@ class Baselines:
                 loss_fxn = nn.MSELoss()
 
             if model_type == 'automlp':
-                factor = model_config['factor']
                 model = mlp.MLP(self.in_dim, self.out_dim, config=model_config).to(self.device)
                 optimizer = optim.Adam(model.parameters(), lr=lr)
 
             if model_type == 'vae':
-                factor = model_config['factor']
                 model = vae.VAE(self.in_dim, self.out_dim, config=model_config).to(self.device)
                 optimizer = optim.Adam(model.parameters(), lr=lr)
 
@@ -125,37 +125,39 @@ class Baselines:
     def run(self):
         self.prep_models()
         print(self.run_configs)
-        run_log = {}
+
         for i, run_config in enumerate(self.run_configs):
-            logs_for_all_epochs = []
-            model_type = self.model_configs[i]['type']
-            for epoch in range(run_config['epochs']):
-                # if its an unsupervised model
-                if model_type == 'vae' or model_type == 'gan':
-                    train.vae_train(self.train_loader, run_config, epoch)
-                    epoch_log = test.vae_test(self.test_loader, run_config, epoch)
-                    pass
-                else:
-                    train.single_epoch(self.train_loader, run_config, epoch)
-                    epoch_log = test.test(self.test_loader, run_config, epoch)
-                    logs_for_all_epochs.append(epoch_log)
+            self.run_model(i, run_config)
 
-            run_log[i] = logs_for_all_epochs
+        #log[0][0][0] and log[0][0][1] are the preds, acts for first epoch
+        for i, epoch in enumerate(self.log[0]):
+            preds = epoch[0]
+            acts = epoch[1]
+            diag.plot_cm(preds, acts, save_path=self.dir, show=True, epoch=i)
 
-            torch.save(run_config['model'], self.dir + "model.pt")  # idk if this is updating when calling train
+        return self.log
 
-            with open(self.dir + self.model_configs[i]['type'] + '_logs.json', 'w') as json_file:
-                json.dump(run_log, json_file)
+    def run_model(self, i, run_config):
+        logs_for_all_epochs = []
+        model_type = self.model_configs[i]['type']
 
-        # self.diags = diag.Diagnostics()
-        n = len(self.run_configs)
-        # plots last epoch
+        for epoch in range(run_config['epochs']):
+            if model_type == 'vae' or model_type == 'gan':  # if unsupervised
+                train.vae_train(self.train_loader, run_config, epoch)
+                epoch_log = test.vae_test(self.test_loader, run_config, epoch)
+            else:
+                train.single_epoch(self.train_loader, run_config, epoch)
+                epoch_log = test.test(self.test_loader, run_config, epoch)
+                logs_for_all_epochs.append(epoch_log)
 
-        for k, v in run_log.items():
-            run_num = k
-            preds = v[0]
-            acts = v[1]
-            diag.plot_cm(preds, acts, save_path=self.dir, show=False, epoch=run_num)
+        self.log.append(logs_for_all_epochs)
+
+        torch.save(run_config['model'], self.dir + "model.pt")  # idk if this is updating when calling train
+
+        # with open(self.dir + self.model_configs[i]['type'] + '_logs.np', 'w') as np_file:
+        #     np_arr = np.ndarray(self.log)
+        #     np.save(np_file, np_arr)
+
 
 def read_json(path):
     with open(path) as config_file:
@@ -176,3 +178,7 @@ def get_dataloaders(dataset, config):
 #
 # def baselines(dataset):
 #     base_class = Baselines(dataset)
+
+
+if __name__ == '__main__':
+    b = Baselines('cifar10.json')

@@ -7,6 +7,7 @@ data/
 
 .DS_Store
 .ipynb_checkpoints/
+.vscode/
 
 *.png
 

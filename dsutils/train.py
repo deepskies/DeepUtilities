@@ -10,7 +10,6 @@ def single_epoch(train_loader, config, epoch):
     correct = 0
     targets = []
     preds = []
-    print('in train')
 
     for batch_idx, (data, target) in enumerate(train_loader):
         target = target.to(device)
@@ -42,7 +41,6 @@ def vae_train(train_loader, config, epoch):
     batch_size = train_loader.batch_size
     correct = 0
 
-    # testing something that only works for classification
     for batch_idx, (data, target) in enumerate(train_loader):
         target = target.to(device)
         data = data.view(batch_size, -1).to(device)
@@ -53,8 +51,6 @@ def vae_train(train_loader, config, epoch):
         pred = enc.argmax(dim=1, keepdim=True) # get the index of the max log-probability
         batch_acc = pred.eq(target.view_as(pred)).sum().item()
         correct += batch_acc
-        print(f'DEC: {dec}')
-        print(f'DATA: {data}')
         loss = loss_fxn(dec, data)
         loss.backward()
         optimizer.step()
