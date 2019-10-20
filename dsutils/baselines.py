@@ -14,13 +14,23 @@ from google.cloud import storage
 import dsutils as ds
 import dsutils.auto.mlp as mlp
 import dsutils.auto.vae as vae
+
 import dsutils.macros as m
-import dsutils.auto.run_epoch as run_epoch
+
+import dsutils.train as train
+import dsutils.test as test
 
 import dsutils.diagnostics as diag
 
 class Baselines:
     '''
+    path_to_config is required with the following required keys:
+    {
+        "id": "quick_test",
+        "dataset": "mnist",
+    }
+
+    roadmap:
     Baselines should be an easy way to train baseline models on any data as well
         as train
 
@@ -38,14 +48,10 @@ class Baselines:
 
     '''
     def __init__(self, path_to_config='./config/mnist.json'):
-        # dataset='mnist', model='mlp', epochs=1, lr=1e-3, classify=True, log_interval=500, factor=5
-        # todo: logging for diagnostics
-        with open(path_to_config) as config_file:
-            self.config = json.load(config_file)
-
+        self.config = read_json(path_to_config)
         dataset = self.config['dataset']
         timestamp = time.strftime("%Y-%m-%d_%H-%M")
-        self.dir = "./experiments/{}_{}_{}".format(dataset, timestamp, self.config["id"])
+        self.dir = "./experiments/{}_{}_{}/".format(dataset, timestamp, self.config["id"])
 
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
@@ -56,71 +62,103 @@ class Baselines:
         #     json.dump(config, config_file)
 
         self.model = None
+        self.run_configs = []  # to build
 
         self.model_configs = self.config['model_configs']
+        print(f'len model configs: {len(self.model_configs)}')
         self.training_config = self.config['training_config']
 
         self.print_freq = self.training_config['print_freq']
-        self.logs = {
-                        'actual' : [],
-                        'predicted' : [],
-                    }
 
         # for now returns pytorch train_loader, test_loader
-        if dataset in m.datasets:
-            self.train_loader, self.test_loader = ds.get_dataset(dataset, self.config)
-            self.in_dim, self.out_dim = 784, 10
-        else:
-            pass
-
+        self.train_loader, self.test_loader = get_dataloaders(dataset, self.config)
+        self.in_dim = self.train_loader.dataset[0][0].numel()
+        self.out_dim = 10
         self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         self.run()
 
-    def run(self):
+
+
+    def read_config(self):
+        # major todo
+        pass
+
+
+    def prep_models(self):
+        # builds and configures the model for train and test, builds a
+        self.run_configs = []
         for i, model_config in enumerate(self.model_configs):
 
-            model = model_config['type']
+            model_type = model_config['type']
             lr = model_config['lr']
             epochs = model_config['epochs']
             classify = model_config['classify']
+            epochs = model_config['epochs']
 
             if classify:
                 loss_fxn = nn.CrossEntropyLoss()
             else:
                 loss_fxn = nn.MSELoss()
 
-            if model == 'automlp':
+            if model_type == 'automlp':
                 factor = model_config['factor']
-                self.model = mlp.MLP(self.in_dim, self.out_dim, config=model_config).to(self.device)
-                self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+                model = mlp.MLP(self.in_dim, self.out_dim, config=model_config).to(self.device)
+                optimizer = optim.Adam(model.parameters(), lr=lr)
 
-            if model == 'vae':
+            if model_type == 'vae':
                 break
 
-            for epoch_id in range(epochs):
+            run_config = {
+                'model': model,
+                'optimizer': optimizer,
+                'device': self.device,
+                'loss_fxn': loss_fxn,
+                'epochs': epochs,
+                'print_freq': self.print_freq,
+            }
 
-                run_config = {
-                    'model': self.model,
-                    'device': self.device,
-                    'loss_fxn': loss_fxn,
-                    'epoch_id': epoch_id,
-                    'print_freq': self.print_freq,
-                    'logs': self.logs
-                }
+            self.run_configs.append(run_config)
 
-                run_epoch.train(self.train_loader, self.optimizer, run_config)
-                run_epoch.test(self.test_loader, run_config)
+    def run(self):
+        self.prep_models()
+        print(self.run_configs)
+        run_log = {}
+        for i, run_config in enumerate(self.run_configs):
+            logs_for_all_epochs = []
 
-        torch.save(self.model, self.dir + "/model.pt")
+            for epoch in range(run_config['epochs']):
+                train.single_epoch(self.train_loader, run_config, epoch)
+                epoch_log = test.test(self.test_loader, run_config, epoch)
+                logs_for_all_epochs.append(epoch_log)
 
+            run_log[i] = logs_for_all_epochs
+
+            torch.save(run_config['model'], self.dir + "model.pt")  # idk if this is updating when calling train
+
+            with open(self.dir + self.model_configs[i]['type'] + '_logs.json', 'w') as json_file:
+                json.dump(run_log, json_file)
 
         # self.diags = diag.Diagnostics()
-        print(f'pred shape = {len(self.logs["predicted"])}')
-        print(f'pred actual= {len(self.logs["actual"])}')
-        diag.plot_cm(self.logs['predicted'], self.logs['actual'], config=self.config, save_path=self.dir)
+        n = len(self.run_configs)
+        diag.plot_cm(run_log[n-1][0]['predicted'], run_log[n-1][0]['actual'], config=self.config, save_path=self.dir)
 
+def read_json(path):
+    with open(path) as config_file:
+        d = json.load(config_file)
+    return d  # type dict
 
+def get_dataloaders(dataset, config):
+    # if its a string assume its a path and read it
+    if isinstance(config, str):
+        config = read_json(config)
 
-def baselines(dataset):
-    base_class = Baselines(dataset)
+    if dataset in m.datasets:
+        train_loader, test_loader = ds.get_dataset(dataset, config)
+        return train_loader, test_loader
+    else:
+        print(f'cant find {dataset}')
+        return None
+#
+# def baselines(dataset):
+#     base_class = Baselines(dataset)

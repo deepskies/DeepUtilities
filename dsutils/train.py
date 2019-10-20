@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
 
-def train(train_loader, optimizer, config):
-    model, device, loss_fxn, epoch, print_freq, logs = config.values()
+def single_epoch(train_loader, config, epoch):
+    model, optimizer, device, loss_fxn, epochs, print_freq = config.values()
     model.train()
     batch_size = train_loader.batch_size
 
@@ -10,6 +10,7 @@ def train(train_loader, optimizer, config):
     correct = 0
     targets = []
     preds = []
+    print('in train')
 
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -34,50 +35,24 @@ def train(train_loader, optimizer, config):
             preds.append(pred)
 
 
-def test(test_loader, config):
-    model, device, loss_fxn, epoch, print_freq, logs = config.values()
-    model.eval()
-    batch_size = test_loader.batch_size
-
-    test_loss = 0
-    correct = 0
-    actuals = []
-    preds = []
-
-    with torch.no_grad():
-        for i, (data, target) in enumerate(test_loader):
-            data = data.view(batch_size, -1)
-
-            data, target = data.to(device), target.to(device)
-
-            output = model(data)
-            batch_loss = loss_fxn(output, target).item() # sum up batch loss
-            test_loss += batch_loss
-
-            pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
-            batch_acc = pred.eq(target.view_as(pred)).sum().item()
-            correct += batch_acc
-            # print(target)
-            if i % print_freq == 0:
-                print(f'epoch: {epoch}, batch: {i}, test_loss: {batch_loss}, acc: {batch_acc}/{batch_size}')
-
-            preds += output.tolist()
-            actuals += target.tolist()
-
-    logs['actual'] += actuals
-    logs['predicted'] += preds
-
 # hacky garbo solution
-def vae_train(train_loader, optimizer, config):
-    model, device, loss_fxn, epoch, print_freq, logs = config.values()
+def vae_train(train_loader, config):
+    model, optimizer, device, loss_fxn, epochs, print_freq = config.values()
     model.train()
     batch_size = train_loader.batch_size
+
+    correct = 0
 
     for batch_idx, (data, _) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         data = data.view(batch_size, -1)
         optimizer.zero_grad()
         output = model(data)
+
+        pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
+        batch_acc = pred.eq(target.view_as(pred)).sum().item()
+        correct += batch_acc
+
         loss = criterion(output, data)
         loss.backward()
         optimizer.step()

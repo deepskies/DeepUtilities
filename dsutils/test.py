@@ -1,0 +1,42 @@
+import torch
+import torch.nn.functional as F
+
+
+def test(test_loader, config, epoch):
+    log = {
+                    'actual' : [],
+                    'predicted' : [],
+                }
+    model, optimizer, device, loss_fxn, epochs, print_freq = config.values()
+    model.eval()
+    batch_size = test_loader.batch_size
+
+    test_loss = 0
+    correct = 0
+    actuals = []
+    preds = []
+
+    with torch.no_grad():
+        for i, (data, target) in enumerate(test_loader):
+            data = data.view(batch_size, -1)
+
+            data, target = data.to(device), target.to(device)
+
+            output = model(data)
+            batch_loss = loss_fxn(output, target).item() # sum up batch loss
+            test_loss += batch_loss
+
+            pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
+            batch_acc = pred.eq(target.view_as(pred)).sum().item()
+            correct += batch_acc
+            # print(target)
+            if i % print_freq == 0:
+                print(f'epoch: {epoch}, batch: {i}, test_loss: {batch_loss}, acc: {batch_acc}/{batch_size}')
+
+            preds += output.tolist()
+            actuals += target.tolist()
+
+    log['actual'] += actuals
+    log['predicted'] += preds
+
+    return log
