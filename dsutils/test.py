@@ -4,11 +4,9 @@ import torch.nn.functional as F
 
 def test(test_loader, config, epoch):
     model, optimizer, device, loss_fxn, epochs, print_freq = config.values()
+
     model.eval()
     batch_size = test_loader.batch_size
-
-    loss_sum = 0
-    correct = 0
 
     preds = []
     actuals = []
@@ -20,11 +18,10 @@ def test(test_loader, config, epoch):
 
             output = model(data)
             loss = loss_fxn(output, target).item() # sum up batch loss
-            loss_sum += loss
 
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
             batch_acc = pred.eq(target.view_as(pred)).sum().item()
-            correct += batch_acc
+
             # print(target)
             if i % print_freq == 0:
                 print(f'epoch: {epoch}, batch: {i}, test_loss: {loss}, acc: {batch_acc}/{batch_size}')
@@ -36,10 +33,8 @@ def test(test_loader, config, epoch):
 
 def vae_test(test_loader, config, epoch):
     model, optimizer, device, loss_fxn, epochs, print_freq = config.values()
-    batch_size = test_loader.batch_size
 
-    loss_sum = 0
-    correct = 0
+    batch_size = test_loader.batch_size
 
     preds = []
     actuals = []
@@ -63,4 +58,4 @@ def vae_test(test_loader, config, epoch):
         actuals += target.tolist()
         decoded += dec.tolist()
 
-    return [preds, actuals]
+    return preds, actuals, decoded

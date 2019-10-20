@@ -48,11 +48,12 @@ def vae_train(train_loader, config, epoch):
         optimizer.zero_grad()
         enc, dec = model(data)
 
-        pred = enc.argmax(dim=1, keepdim=True) # get the index of the max log-probability
-        batch_acc = pred.eq(target.view_as(pred)).sum().item()
-        correct += batch_acc
+        # pred = enc.argmax(dim=1, keepdim=True) # get the index of the max log-probability
+        # batch_acc = pred.eq(target.view_as(pred)).sum().item()
+        # correct += batch_acc
+        
         loss = loss_fxn(dec, data)
         loss.backward()
         optimizer.step()
         if batch_idx % print_freq == 0:
-            print(f'epoch: {epoch}, batch: {batch_idx}, loss: {loss}, batch_acc: {batch_acc}/{batch_size}')
+            print(f'epoch: {epoch}, batch: {batch_idx}, loss: {loss}')

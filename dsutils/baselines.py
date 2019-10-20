@@ -10,6 +10,9 @@ import torch
 import torch.nn as nn
 import torch.utils.data # import DataLoader, Dataset
 import torch.optim as optim
+import torchvision
+
+import matplotlib.pyplot as plt
 
 from google.cloud import storage
 
@@ -21,6 +24,7 @@ import dsutils.macros as m
 
 import dsutils.train as train
 import dsutils.test as test
+import dsutils.data
 
 import dsutils.diagnostics as diag
 
@@ -74,11 +78,16 @@ class Baselines:
         self.print_freq = self.training_config['print_freq']
 
         # for now returns pytorch train_loader, test_loader
-        self.train_loader, self.test_loader = get_dataloaders(dataset, self.config)
-        self.in_dim = self.train_loader.dataset[0][0].numel()
+        self.train_loader, self.test_loader = dsutils.data.get_dataset(dataset, self.config)
+
+        self.original_elt = self.train_loader.dataset[0][0]
+        self.original_shape = self.original_elt.shape
+        self.in_dim = self.original_elt.numel()
         self.out_dim = 10
         # self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        self.log = []
+        self.actuals = []
+        self.predicted = []
+        self.decoded = []
         self.run()
 
     def read_config(self):
@@ -129,28 +138,32 @@ class Baselines:
         for i, run_config in enumerate(self.run_configs):
             self.run_model(i, run_config)
 
-        #log[0][0][0] and log[0][0][1] are the preds, acts for first epoch
-        for i, epoch in enumerate(self.log[0]):
-            preds = epoch[0]
-            acts = epoch[1]
-            diag.plot_cm(preds, acts, save_path=self.dir, show=True, epoch=i)
+        for preds, actual in zip(self.predicted, self.actuals):
+            diag.plot_cm(preds, actual, save_path=self.dir, show=False, epoch=i)
 
-        return self.log
+        random_train_images(self.decoded, viewas=self.original_shape)
+        # todo save to file
+        return self.predicted, self.actuals, self.decoded
 
     def run_model(self, i, run_config):
-        logs_for_all_epochs = []
         model_type = self.model_configs[i]['type']
 
         for epoch in range(run_config['epochs']):
             if model_type == 'vae' or model_type == 'gan':  # if unsupervised
                 train.vae_train(self.train_loader, run_config, epoch)
-                epoch_log = test.vae_test(self.test_loader, run_config, epoch)
+                preds, actuals, decoded = test.vae_test(self.test_loader, run_config, epoch)
+                self.predicted.append(preds)
+                self.actuals.append(actuals)
+                self.decoded.append(decoded)
             else:
                 train.single_epoch(self.train_loader, run_config, epoch)
-                epoch_log = test.test(self.test_loader, run_config, epoch)
-                logs_for_all_epochs.append(epoch_log)
+                preds, actuals = test.test(self.test_loader, run_config, epoch)
+                self.predicted.append(preds)
+                self.actuals.append(actuals)
 
-        self.log.append(logs_for_all_epochs)
+        # flat_img = torch.tensor(self.decoded[-1][1])
+        # img = flat_img.view(self.original_shape)
+        # imshow(img)
 
         torch.save(run_config['model'], self.dir + "model.pt")  # idk if this is updating when calling train
 
@@ -158,27 +171,34 @@ class Baselines:
         #     np_arr = np.ndarray(self.log)
         #     np.save(np_file, np_arr)
 
+def imshow(img):
+    img = img / 2 + 0.5     # unnormalize
+    npimg = img.numpy()
+    plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    plt.show()
+
+def random_train_images(train_loader, classes, viewas=None):
+    dataiter = iter(train_loader)
+    images, labels = dataiter.next() 
+    
+    if viewas:
+        images = [image.view(viewas) for image in images]
+    
+    # show images
+    imshow(torchvision.utils.make_grid(images))
+    # print labels
+    print(' '.join('%5s' % classes[labels[j]] for j in range(train_loader.batch_size)))
+
 
 def read_json(path):
     with open(path) as config_file:
         d = json.load(config_file)
     return d  # type dict
 
-def get_dataloaders(dataset, config):
-    # if its a string assume its a path and read it
-    if isinstance(config, str):
-        config = read_json(config)
-
-    if dataset in m.datasets:
-        train_loader, test_loader = ds.get_dataset(dataset, config)
-        return train_loader, test_loader
-    else:
-        print(f'cant find {dataset}')
-        return None
 #
 # def baselines(dataset):
 #     base_class = Baselines(dataset)
 
 
 if __name__ == '__main__':
-    b = Baselines('cifar10.json')
+    b = Baselines('vae.json')

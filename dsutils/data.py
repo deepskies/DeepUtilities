@@ -12,36 +12,31 @@ def experiment_path(dataset_name):
 
 
 def get_dataset(dataset_name='mnist', config=None):
-
+    # bs is train_batch_size and tbs is test_batch_size
     if config:
         train_config = config['training_config']
-        batch_sizes = []
-        for item in ['batch_size', 'test_batch_size']:
-            try:
-                batch_sizes.append(train_config[item])
-            except KeyError:
-                batch_sizes.append(1)
-        train_batch_size, test_batch_size = batch_sizes
-    else:
-        train_batch_size = 1
-        test_batch_size = 1
+        bs, tbs = train_config.get('batch_size'), train_config.get('test_batch_size')
+
+    if not bs:
+        bs = 1
+    if not tbs:
+        tbs = 1
+
 
     if dataset_name == 'mnist':
-        train_loader, test_loader = mnist_loaders(train_batch_size, test_batch_size)
+        train_loader, test_loader = mnist_loaders(bs, tbs)
     elif dataset_name == 'cifar10':
-        train_loader, test_loader = cifar_loaders(train_batch_size, test_batch_size)
+        train_loader, test_loader = cifar_loaders(bs, tbs)
+    elif dataset_name == 'FashionMNIST':
+        train_loader, test_loader = fashion_mnist_loaders(bs, tbs)
     return train_loader, test_loader
 
 
 def mnist_loaders(batch_size, test_batch_size):
+    transform = transforms.ToTensor()   
 
-    data_path = experiment_path('minst') + 'data/'
-
-    # download if the path doesn't exist
-    dl = not os.path.exists(data_path)
-
-    train_set = datasets.MNIST(data_path, train=True, download=dl, transform=transforms.ToTensor())
-    test_set = datasets.MNIST(data_path, train=False, transform=transforms.ToTensor())
+    train_set = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+    test_set = datasets.MNIST(root='./data', train=False, transform=transform)
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=test_batch_size, shuffle=True)
@@ -49,13 +44,28 @@ def mnist_loaders(batch_size, test_batch_size):
     return train_loader, test_loader
 
 def cifar_loaders(train_batch_size, test_batch_size):
-    data_path = experiment_path('minst') + 'data/'
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    transform = transforms.ToTensor()
 
     trainset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     train_loader = DataLoader(trainset, batch_size=train_batch_size, shuffle=True, num_workers=2)
 
     testset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
     test_loader = DataLoader(testset, batch_size=test_batch_size, shuffle=False, num_workers=2)
-    classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+    return train_loader, test_loader
+
+
+def fashion_mnist_loaders(train_batch_size, test_batch_size):
+    transform = transforms.ToTensor()
+
+    trainset = datasets.FashionMNIST(
+        root='./data', train=True, download=True, transform=transform)
+    train_loader = DataLoader(
+        trainset, batch_size=train_batch_size, shuffle=True, num_workers=2)
+
+    testset = datasets.FashionMNIST(
+        root='./data', train=False, download=True, transform=transform)
+    test_loader = DataLoader(
+        testset, batch_size=test_batch_size, shuffle=False, num_workers=2)
+
     return train_loader, test_loader
