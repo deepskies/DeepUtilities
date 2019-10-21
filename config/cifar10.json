@@ -7,7 +7,7 @@
             "factor": 5,
             "classify": true,
             "lr": 1E-3,
-            "epochs": 2,
+            "epochs": 4,
             "activation_fxn": "tanh"
         },
         {
