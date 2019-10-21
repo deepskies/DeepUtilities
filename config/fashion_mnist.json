@@ -1,6 +1,6 @@
 {
     "id": "config_test_1",
-    "dataset": "mnist",
+    "dataset": "FashionMNIST",
     "device": "cpu",
     "model_configs": [
         {

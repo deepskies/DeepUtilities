@@ -1,0 +1,25 @@
+{
+    "dataset": "FashionMNIST",
+    "device": "gpu",
+    "model_configs": [
+        {
+            "type": "vae",
+            "layer_type": "mlp",
+            "factor": 8,
+            "classify": false,
+            "activation_fxn": "tanh",
+            "lr": 1E-3,
+            "epochs": 2
+        }
+    ],
+    "training_config": {
+        "batch_size": 100,
+        "test_batch_size": 1000,
+        "print_freq": 100
+    },
+    "plot_config": {
+        "show": false,
+        "save": true
+    }
+
+}

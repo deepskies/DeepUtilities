@@ -4,10 +4,10 @@
 
 experiments/
 data/
-config/
 
 .DS_Store
 .ipynb_checkpoints/
+.vscode/
 
 *.png
 
