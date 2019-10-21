@@ -10,3 +10,4 @@ data = ds.get_dataset('strong_lens', scale=False)  # have option for scaling
 ds.baselines(data, save=True, plots=True)
 ```
 
+or run `baselines.py` from project parent directory

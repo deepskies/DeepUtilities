@@ -144,4 +144,4 @@ def read_json(path):
     return d 
 
 if __name__ == '__main__':
-    b = Baselines('./config/cifar10.json')
+    b = Baselines('./config/fashion_mnist.json')
