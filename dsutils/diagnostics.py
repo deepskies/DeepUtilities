@@ -13,7 +13,7 @@ import seaborn as sn
 import numpy as np
 import pandas as pd
 import sklearn
-#import scikitplot as skplt
+import scikitplot as skplt
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import average_precision_score
@@ -46,16 +46,6 @@ class Diagnostics(object):
     plt.rc('xtick.minor', size=6, pad=5)
     plt.rc('ytick.major', size=8, pad=8)
     plt.rc('ytick.minor', size=6, pad=5)
-
-    def check_for_array(arr, name):
-        if (not hasattr(arr, '__len__') and (not isinstance(arr, str))): raise Exception(name + " is not in the appropriate format. Should be an array")
-
-    def check_for_same_length(arr1, name1, arr2, name2):
-        if (not (len(arr1) == len(arr2))): raise Exception(name1 + " and " + name2 + " are not the same length")
-
-    def check_for_dataframe(arr, name):
-         if (not isinstance(arr, pd.DataFrame)): raise Exception(name + " is not in the appropriate format. Should be a dataframe")
-
 
     def __init__(self, config, path, predicted, actual, acc=[0,0], loss=[0.0], auc=[0,0], feature_list=0, cross_val=0, data_batch=0, labels_batch=0):
         # Mandatory lists for diagnostics
@@ -95,7 +85,7 @@ class Diagnostics(object):
         try:
             metrics = np.array([(self.loss[0], self.loss[1]), (self.acc[0], self.acc[1]), (self.auc[0], self.auc[1])])
         except:
-            raise Excpetion("Inputs for any or all of loss, acc, auc are not properly formatted. Please input lists of with [train, test]")
+            raise Exception("Inputs for any or all of loss, acc, auc are not properly formatted. Please input lists of with [train, test]")
 
         # if you want to plot individual metrics
         if save_individual:
@@ -172,7 +162,7 @@ class Diagnostics(object):
           - figsize: tuple, the desired size of the image
           - show: boolean, whether you want to plt.show() your figure or just save it to your computer
         """
-        actual_lbl = self.convert_to_index(self.actual)
+        actual_lbl = convert_to_index(self.actual)
         #actual_lbl = [np.argmax(array_temp) for array_temp in self.actual]
         skplt.metrics.plot_roc(actual_lbl, self.predicted, figsize=figsize)
         if show: plt.show()
@@ -284,8 +274,8 @@ class Diagnostics(object):
         colors = ['#E69F00', '#56B4E9']
         names = ['True {}'.format(target), 'Predicted {}'.format(target)]
 
-        actual_lbls = self.convert_to_index(self.actual)
-        pred_lbls = self.convert_to_index(self.predicted)
+        actual_lbls = convert_to_index(self.actual)
+        pred_lbls = convert_to_index(self.predicted)
 
         plt.figure(figsize=figsize)
         plt.hist([actual_lbls, pred_lbls], color=colors, label=names)
@@ -319,7 +309,7 @@ class Diagnostics(object):
 
         num_imgs = len(self.data)
         counter = 1
-        labels = self.convert_to_index(self.labels_batch)
+        labels = convert_to_index(self.labels_batch)
 
         # if the image data is in the format [batch_size, channels, height, width]
         if (self.data.shape)[1] < (self.data.shape)[3]:
@@ -357,8 +347,8 @@ class Diagnostics(object):
 
     def precision_recall_plot(self, show=True):
         plt.figure()
-        actual_lbl = self.convert_to_index(self.actual)
-        pred_lbl = self.convert_to_index(self.predicted)
+        actual_lbl = convert_to_index(self.actual)
+        pred_lbl = convert_to_index(self.predicted)
 
         preicision, recall = precision_recall_curve(actual_lbl, pred_lbl)
         tep_kwargs = ({'step': 'post'}
@@ -389,6 +379,22 @@ class Diagnostics(object):
 
     def plot_path(self, plot_name):
         return self.path + plot_name
+
+
+def check_for_array(arr, name):
+    if (not hasattr(arr, '__len__') and (not isinstance(arr, str))):
+        raise Exception(
+            name + " is not in the appropriate format. Should be an array")
+
+def check_for_same_length(arr1, name1, arr2, name2):
+    if (not (len(arr1) == len(arr2))):
+        raise Exception(name1 + " and " + name2 +
+                        " are not the same length")
+
+def check_for_dataframe(arr, name):
+        if (not isinstance(arr, pd.DataFrame)):
+            raise Exception(
+                name + " is not in the appropriate format. Should be a dataframe")
 
 
 def convert_to_index(array_categorical):

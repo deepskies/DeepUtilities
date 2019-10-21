@@ -20,11 +20,11 @@ class MLP(nn.Module):
                     'type': 'mlp',
                     'factor': 10,
                     'classify': True,
-                    'activation_fxn': activations['tanh'],
+                    'activation_fxn': 'tanh',
                     'lr': 1e-3,
                     }
         self.classify = self.config['classify']
-        self.activation_fxn = self.config['activation_fxn']
+        self.activation_fxn = activations[self.config['activation_fxn']]
 
         factor = self.config['factor']
         layer_dimensions = shape.log_dims(input_dim, output_dim, factor=factor)

@@ -36,62 +36,40 @@ class Baselines:
         "id": "quick_test",
         "dataset": "mnist",
     }
-
-    roadmap:
-    Baselines should be an easy way to train baseline models on any data as well
-        as train
-
-    dataset - * list of tuples [(X1, Y1) , ... , (Xn, Yn)]
-              * 'mnist' - a string referencing a dataset
-                 if string, dataset downloaded to dsutils/../experiment_name/exp_iter
-
-              * tf dataset
-              * pytorch dataloader
-
-
-    model - * PyTorch model
-            * Tensorflow model
-            * string in ['mlp', 'vae', 'conv1d', # todo - 'conv2d', 'node', 'gan', 'lstm', 'rnn']
-
     '''
-    def __init__(self, path_to_config='./config/mnist.json'):
-        self.config = read_json(path_to_config)
-        dataset = self.config['dataset']
-        timestamp = time.strftime("%Y-%m-%d_%H-%M")
-        self.dir = "./experiments/{}_{}_{}/".format(dataset, timestamp, self.config["id"])
+    def __init__(self, config_path='./config/mnist.json'):
+       
+        with open(config_path, 'r') as config:
+            self.config = json.load(config)
 
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
-            os.makedirs(self.dir +'/plots/')
-
-
-        # Save config file in experiment directory
-        # disabled for now
-        # with open(self.dir + '/config.json', 'w') as config_file:
-        #     json.dump(config, config_file)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.dir = init_experiment(self.config)   
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # ignores config
 
         self.model = None
-        self.run_configs = []  # to build
-
+        self.run_configs = []
         self.model_configs = self.config['model_configs']
-        print(f'len model configs: {len(self.model_configs)}')
         self.training_config = self.config['training_config']
 
-        self.print_freq = self.training_config['print_freq']
-
         # for now returns pytorch train_loader, test_loader
-        self.train_loader, self.test_loader = dsutils.data.get_dataset(dataset, self.config)
+        self.train_loader, self.test_loader = dsutils.data.get_dataset(self.config['dataset'], self.config)
 
         self.original_elt = self.train_loader.dataset[0][0]
         self.original_shape = self.original_elt.shape
         self.in_dim = self.original_elt.numel()
         self.out_dim = 10
-        # self.device = self.config['device'] # torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.actuals = []
         self.predicted = []
         self.decoded = []
         self.run()
+
+    def run(self):
+        self.prep_models()
+        print(self.run_configs)
+
+        for i, run_config in enumerate(self.run_configs):
+            self.run_model(i, run_config)
+
+        return self.predicted, self.actuals, self.decoded
 
     def read_config(self):
         # major todo
@@ -121,22 +99,11 @@ class Baselines:
                 'device': self.device,
                 'loss_fxn': loss_fxn,
                 'epochs': model_config['epochs'],
-                'print_freq': self.print_freq,
+                'print_freq': self.training_config['print_freq'],
             }
 
             self.run_configs.append(run_config)
 
-    def run(self):
-        self.prep_models()
-        print(self.run_configs)
-
-        for i, run_config in enumerate(self.run_configs):
-            self.run_model(i, run_config)
-
-        # for preds, actual in zip(self.predicted, self.actuals):
-        #     diag.plot_cm(preds, actual, save_path=self.dir + 'plots/', show=False, epoch=i)
-
-        return self.predicted, self.actuals, self.decoded
 
     def run_model(self, i, run_config):
         model_type = self.model_configs[i]['type']
@@ -148,8 +115,8 @@ class Baselines:
         for epoch in range(epochs):
             if model_type == 'vae' or model_type == 'gan':  # if unsupervised
                 train.vae_train(self.train_loader, run_config, epoch)
-                bins, actuals, decoded = test.vae_test(self.test_loader, run_config, epoch)
-                self.predicted.append(bins)
+                preds, actuals, decoded = test.vae_test(self.test_loader, run_config, epoch)
+                self.predicted.append(preds)  # arbitrary bins
                 self.actuals.append(actuals)
                 self.decoded.append(decoded)
             else:
@@ -157,35 +124,26 @@ class Baselines:
                 preds, actuals = test.test(self.test_loader, run_config, epoch)
                 self.predicted.append(preds)
                 self.actuals.append(actuals)
-            diag.plot_cm(preds, actual, save_path=self.dir +
+
+            diag.plot_cm(preds, actuals, save_path=self.dir +
                          'plots/', show=False, epoch=epoch)
         torch.save(run_config['model'], self.dir + "model.pt")  # idk if this is updating when calling train
 
+def init_experiment(config):
+    dataset = config['dataset']
+    timestamp = time.strftime("%Y-%m-%d_%H-%M")
+    dir = "./experiments/{}_{}/".format(
+        dataset, timestamp)
 
-# todo deprecate
-def random_train_images(train_loader, classes, num=10, viewas=None, fn=None):
-    dataiter = iter(train_loader)
-    imgs = next(dataiter) 
-    if viewas:
-        images = [torch.tensor(image).view(viewas) for image in imgs]
-
-    if not fn:
-        fn = '../experiments/FIX'
-
-    for i in range(10):
-        torchvision.utils.save_image(images[i], fn + f'_{i}.jpeg', nrow=8, padding=2,
-                                normalize=False, range=None, scale_each=False, pad_value=0)
-        
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+        os.makedirs(dir + '/plots/')
+    return dir
 
 def read_json(path):
     with open(path) as config_file:
         d = json.load(config_file)
-    return d  # type dict
-
-#
-# def baselines(dataset):
-#     base_class = Baselines(dataset)
-
+    return d 
 
 if __name__ == '__main__':
     b = Baselines('cifar10.json')

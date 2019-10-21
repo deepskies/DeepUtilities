@@ -1,5 +1,4 @@
 {
-    "id": "config_test_1",
     "dataset": "cifar10",
     "device": "gpu",
     "model_configs": [
@@ -8,7 +7,7 @@
             "factor": 5,
             "classify": true,
             "lr": 1E-3,
-            "epochs": 20,
+            "epochs": 2,
             "activation_fxn": "tanh"
         },
         {
@@ -18,7 +17,7 @@
             "classify": false,
             "activation_fxn": "tanh",
             "lr": 1E-3,
-            "epochs": 5
+            "epochs": 2
         }
     ],
     "training_config": {

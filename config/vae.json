@@ -1,5 +1,4 @@
 {
-    "id": "config_test_1",
     "dataset": "FashionMNIST",
     "device": "gpu",
     "model_configs": [
@@ -10,7 +9,7 @@
             "classify": false,
             "activation_fxn": "tanh",
             "lr": 1E-3,
-            "epochs": 5
+            "epochs": 2
         }
     ],
     "training_config": {
