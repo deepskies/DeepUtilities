@@ -1,1 +1,0 @@
-datasets = ['mnist', 'cifar10']
