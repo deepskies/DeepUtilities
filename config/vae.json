@@ -6,11 +6,11 @@
         {
             "type": "vae",
             "layer_type": "mlp",
-            "factor": 10,
+            "factor": 8,
             "classify": false,
             "activation_fxn": "tanh",
             "lr": 1E-3,
-            "epochs": 10
+            "epochs": 5
         }
     ],
     "training_config": {

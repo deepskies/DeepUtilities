@@ -3,6 +3,7 @@ import sys
 import os.path
 import json
 import time
+import random
 
 import numpy as np
 
@@ -61,6 +62,8 @@ class Baselines:
 
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
+            os.makedirs(self.dir +'/plots/')
+
 
         # Save config file in experiment directory
         # disabled for now
@@ -94,38 +97,30 @@ class Baselines:
         # major todo
         pass
 
-
     def prep_models(self):
         # builds and configures the model for train and test, builds a
         self.run_configs = []
         for model_config in self.model_configs:
 
-            model_type = model_config['type']
-            lr = model_config['lr']
-            epochs = model_config['epochs']
-            classify = model_config['classify']
-            epochs = model_config['epochs']
+            loss_fxn = nn.CrossEntropyLoss() if model_config['classify'] else nn.MSELoss()
+                
+            if model_config['type'] == 'automlp':
+                model = mlp.MLP(self.in_dim, self.out_dim,
+                                config=model_config).to(self.device)
+                optimizer = optim.Adam(
+                    model.parameters(), lr=model_config['lr'])
 
-            if classify:
-                loss_fxn = nn.CrossEntropyLoss()
-            else:
-                loss_fxn = nn.MSELoss()
-
-            if model_type == 'automlp':
-                model = mlp.MLP(self.in_dim, self.out_dim, config=model_config).to(self.device)
-                optimizer = optim.Adam(model.parameters(), lr=lr)
-
-            if model_type == 'vae':
+            elif model_config['type'] == 'vae':
                 model = vae.VAE(self.in_dim, self.out_dim, config=model_config).to(self.device)
-                optimizer = optim.Adam(model.parameters(), lr=lr)
-
+                optimizer = optim.Adam(
+                    model.parameters(), lr=model_config['lr'])
 
             run_config = {
                 'model': model,
                 'optimizer': optimizer,
                 'device': self.device,
                 'loss_fxn': loss_fxn,
-                'epochs': epochs,
+                'epochs': model_config['epochs'],
                 'print_freq': self.print_freq,
             }
 
@@ -138,21 +133,23 @@ class Baselines:
         for i, run_config in enumerate(self.run_configs):
             self.run_model(i, run_config)
 
-        for preds, actual in zip(self.predicted, self.actuals):
-            diag.plot_cm(preds, actual, save_path=self.dir, show=False, epoch=i)
+        # for preds, actual in zip(self.predicted, self.actuals):
+        #     diag.plot_cm(preds, actual, save_path=self.dir + 'plots/', show=False, epoch=i)
 
-        random_train_images(self.decoded, viewas=self.original_shape)
-        # todo save to file
         return self.predicted, self.actuals, self.decoded
 
     def run_model(self, i, run_config):
         model_type = self.model_configs[i]['type']
+        epochs = run_config['epochs']
+        self.actuals = []
+        self.decoded = []
+        self.predicted = []
 
-        for epoch in range(run_config['epochs']):
+        for epoch in range(epochs):
             if model_type == 'vae' or model_type == 'gan':  # if unsupervised
                 train.vae_train(self.train_loader, run_config, epoch)
-                preds, actuals, decoded = test.vae_test(self.test_loader, run_config, epoch)
-                self.predicted.append(preds)
+                bins, actuals, decoded = test.vae_test(self.test_loader, run_config, epoch)
+                self.predicted.append(bins)
                 self.actuals.append(actuals)
                 self.decoded.append(decoded)
             else:
@@ -160,35 +157,25 @@ class Baselines:
                 preds, actuals = test.test(self.test_loader, run_config, epoch)
                 self.predicted.append(preds)
                 self.actuals.append(actuals)
-
-        # flat_img = torch.tensor(self.decoded[-1][1])
-        # img = flat_img.view(self.original_shape)
-        # imshow(img)
-
+            diag.plot_cm(preds, actual, save_path=self.dir +
+                         'plots/', show=False, epoch=epoch)
         torch.save(run_config['model'], self.dir + "model.pt")  # idk if this is updating when calling train
 
-        # with open(self.dir + self.model_configs[i]['type'] + '_logs.np', 'w') as np_file:
-        #     np_arr = np.ndarray(self.log)
-        #     np.save(np_file, np_arr)
 
-def imshow(img):
-    img = img / 2 + 0.5     # unnormalize
-    npimg = img.numpy()
-    plt.imshow(np.transpose(npimg, (1, 2, 0)))
-    plt.show()
-
-def random_train_images(train_loader, classes, viewas=None):
+# todo deprecate
+def random_train_images(train_loader, classes, num=10, viewas=None, fn=None):
     dataiter = iter(train_loader)
-    images, labels = dataiter.next() 
-    
+    imgs = next(dataiter) 
     if viewas:
-        images = [image.view(viewas) for image in images]
-    
-    # show images
-    imshow(torchvision.utils.make_grid(images))
-    # print labels
-    print(' '.join('%5s' % classes[labels[j]] for j in range(train_loader.batch_size)))
+        images = [torch.tensor(image).view(viewas) for image in imgs]
 
+    if not fn:
+        fn = '../experiments/FIX'
+
+    for i in range(10):
+        torchvision.utils.save_image(images[i], fn + f'_{i}.jpeg', nrow=8, padding=2,
+                                normalize=False, range=None, scale_each=False, pad_value=0)
+        
 
 def read_json(path):
     with open(path) as config_file:
@@ -201,4 +188,4 @@ def read_json(path):
 
 
 if __name__ == '__main__':
-    b = Baselines('vae.json')
+    b = Baselines('cifar10.json')

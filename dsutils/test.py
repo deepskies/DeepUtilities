@@ -45,14 +45,10 @@ def vae_test(test_loader, config, epoch):
         target = target.to(device)
 
         enc, dec = model(data)
-
-        pred = enc.argmax(dim=1, keepdim=True) # get the index of the max log-probability
-        batch_acc = pred.eq(target.view_as(pred)).sum().item()  # THIS SHOULD BE NOISE RN
-
         batch_loss = loss_fxn(dec, data).item()
 
         if i % print_freq == 0:
-            print(f'epoch: {epoch}, batch: {i}, test_loss: {batch_loss}, acc: {batch_acc}/{batch_size}')
+            print(f'epoch: {epoch}, batch: {i}, test_loss: {batch_loss}')
 
         preds += enc.tolist()
         actuals += target.tolist()

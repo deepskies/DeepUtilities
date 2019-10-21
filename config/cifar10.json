@@ -10,6 +10,15 @@
             "lr": 1E-3,
             "epochs": 20,
             "activation_fxn": "tanh"
+        },
+        {
+            "type": "vae",
+            "layer_type": "mlp",
+            "factor": 8,
+            "classify": false,
+            "activation_fxn": "tanh",
+            "lr": 1E-3,
+            "epochs": 5
         }
     ],
     "training_config": {

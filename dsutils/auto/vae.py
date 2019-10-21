@@ -8,11 +8,19 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
 import dsutils as ds
-from dsutils.auto import utils
 from dsutils.auto import mlp
 
 # from dsutils.auto import train
 from dsutils.auto import shape
+
+CONFIG = {
+    'type': 'vae',
+    'layer_type': 'mlp',
+    'factor': 10,
+    'classify': True,
+    'activation_fxn': 'tanh',
+    'lr': 1e-3,
+}
 
 class VAE(nn.Module):
     '''
@@ -25,20 +33,10 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         self.config = config
         if not self.config:
-            self.config = {
-                    'type': 'vae',
-                    'layer_type': 'mlp',
-                    'factor': 10,
-                    'classify': True,
-                    'activation_fxn': 'tanh',
-                    'lr': 1e-3,
-                    }
-            dec_config = self.config
-            dec_config['classify'] = False
+            self.config = CONFIG
 
-        else:
-            dec_config = self.config  # dont want to classify the output of a vae
-            dec_config['classify'] = False
+        dec_config = self.config
+        dec_config['classify'] = False
 
         layer_type = self.config.get('layer_type')
 

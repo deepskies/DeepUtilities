@@ -4,25 +4,29 @@ import torch.nn.functional as F
 
 import dsutils as ds
 from dsutils.auto import shape
-from dsutils.auto import utils
 
 
 class MLP(nn.Module):
     def __init__(self, input_dim, output_dim, config=None):
         super(MLP, self).__init__()
         self.config = config
+        activations = {
+            'relu': nn.ReLU(),
+            'sigmoid': nn.Sigmoid(),
+            'tanh': nn.Tanh()
+        }
         if not config:
             self.config = {
                     'type': 'mlp',
                     'factor': 10,
                     'classify': True,
-                    'activation_fxn': 'tanh',
+                    'activation_fxn': activations['tanh'],
                     'lr': 1e-3,
                     }
         self.classify = self.config['classify']
-        factor = self.config['factor']
-        self.activation_fxn = utils.activations[self.config['activation_fxn']]
+        self.activation_fxn = self.config['activation_fxn']
 
+        factor = self.config['factor']
         layer_dimensions = shape.log_dims(input_dim, output_dim, factor=factor)
 
         # dense layers from tuples
