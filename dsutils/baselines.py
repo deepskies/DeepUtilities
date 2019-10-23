@@ -21,8 +21,6 @@ import dsutils as ds
 import dsutils.auto.mlp as mlp
 import dsutils.auto.vae as vae
 
-import dsutils.macros as m
-
 import dsutils.train as train
 import dsutils.test as test
 import dsutils.data
@@ -146,4 +144,4 @@ def read_json(path):
     return d 
 
 if __name__ == '__main__':
-    b = Baselines('cifar10.json')
+    b = Baselines('./config/fashion_mnist.json')
