@@ -1,0 +1,9 @@
+'''' - if there are no usful plotting functions, + if there are ''''
+
+Alex:
+  - LensPop
+  - einsteniangema
+  + stronglenses
+  
+  
+  Brian:
