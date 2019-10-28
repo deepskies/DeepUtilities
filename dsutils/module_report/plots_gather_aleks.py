@@ -12,7 +12,7 @@ def get_ROC(model_nm, nb_thresh=1000):
                         for c, preds in preds_by_class.items()}
     return tuple(recalls_by_class[c] for c in classes)
     
-    def get_cums(model_nm, bins=1000, eps=1e-6):
+def get_cums(model_nm, bins=1000, eps=1e-6):
     ''' Return domain [0.5, 1.0] of conf, cumulative counts of correct
         predictions on sets of given min conf, and cumulative counts of
         all predictions on those sets.
@@ -33,7 +33,7 @@ def get_ROC(model_nm, nb_thresh=1000):
     total_cum = blur(total_cum, sigma=bins/40)
     return confidences, correct_cum, total_cum 
     
-    def auc_from_roc(sensitivities, selectivities):
+def auc_from_roc(sensitivities, selectivities):
     ''' Computes `area under the curve` by linear interpolation
     '''
     r_old, d_old = 1.0, 0.0 # at 0 threshold, perfect recall
