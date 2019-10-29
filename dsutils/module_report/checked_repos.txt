@@ -5,6 +5,9 @@ Alex:
   - einsteniangema
   + stronglenses
   + deeplensing-old
+  - deeplenspop
+  - leqsearch
+   
   
   
   Brian:
