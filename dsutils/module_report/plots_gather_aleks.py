@@ -720,3 +720,5 @@ def create_report(params, params_model, dirs, figure_dict, data_analysis):
 
 ''' notebook With a REPORT example https://github.com/deepskies/deeplensing-old/blob/master/notebooks/.ipynb_checkpoints/analysis_safe-checkpoint.ipynb '''
 ''' https://github.com/deepskies/deeplensing-old/blob/master/notebooks/.ipynb_checkpoints/plot_layers-checkpoint.ipynb''' 
+
+
