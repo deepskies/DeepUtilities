@@ -7,6 +7,10 @@ Alex:
   + deeplensing-old
   - deeplenspop
   - leqsearch
+    unsupervisedlensing (cannot opet notebooks)
+  + tlens
+  - deepcosmos
+  
    
   
   
