@@ -4,6 +4,7 @@ Alex:
   - LensPop
   - einsteniangema
   + stronglenses
+  + deeplensing-old
   
   
   Brian:
