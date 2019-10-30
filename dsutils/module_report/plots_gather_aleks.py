@@ -756,3 +756,4 @@ def plot_mnist(X, y, X_embedded, name, min_dist=10.0):
     plt.show()
     
    
+''' SALIENCY MAPS: https://github.com/deepskies/deepmhd/blob/master/PB19_saliency_maps.ipynb'''
