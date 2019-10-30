@@ -27,6 +27,24 @@ Alex:
   - cosmonet
   - nn
   - subhalo
+  - BHFinder
+  - Lens-Cosmology
+  - deepweb
+  - deeptransfer
+  - deepskycadence
+  - DeepSkiesDQN 
+  - deeplensing
+  - AutoSL
+  - OptClusterPhot 
+  - SimplePhysicalImage 
+  - DeepDiagnostic 
+  - deeplenstronomy
+  - saliency
+  - DistributedTraining 
+  - deeplenstronomy_extensions
+  + deepmhd 
+  - DeepQuasar
+  - DeepStreams
   
   
   
