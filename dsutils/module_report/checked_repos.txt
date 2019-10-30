@@ -12,6 +12,22 @@ Alex:
   - deepcosmos
   - lensometer
   - DNNStrategies
+  - gplens
+  - skyrings
+  - DeepQSO
+  - DeepPhysicsModel
+  - DeepLensingMeasurement (cannot opt in google colab)
+  - sandbox
+  - test
+  - Test1
+  - test2
+  - deblensed
+  - GCEDeblendProto
+  - tf-probability
+  - cosmonet
+  - nn
+  - subhalo
+  
   
   
    
