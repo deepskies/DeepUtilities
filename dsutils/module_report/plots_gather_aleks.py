@@ -983,3 +983,82 @@ def show_imgs(inputs, outputs, predicted=None, indices=range(10),filename=None,
     plt.clf()
 
 ''' https://github.com/deepskies/deepmerge/blob/master/DeepMerge.ipynb '''
+
+''' https://github.com/deepskies/stronglensbnns/blob/master/src/notebooks/Bayesian_CNN.ipynb''''
+#@title
+from scipy.stats import norm
+import matplotlib.pylab as pl
+
+def visualize_norm_dist(means, stds, labels, title, ax=None, target=None):
+  if ax is None:
+    fig, ax = plt.subplots(figsize=(15,6))
+  palette = pl.cm.jet(np.linspace(0, 1, len(means))) 
+  mx = 0
+  for idx, mean in enumerate(means):
+    std = stds[idx]
+    x = np.linspace(mean - 4*std, mean + 4*std, 1000)
+    y = norm.pdf(x, mean, std)
+    mx = max(np.max(y), mx)
+    ax.plot(x, y, label=labels[idx], color=palette[idx])
+  if target:  
+    lab_x = [target, target]
+    lab_y = [-0.1*mx, 1.1*mx]
+    ax.plot(lab_x, lab_y, 'k-', label='target')  
+  plt.title(title)
+  plt.xlabel('x')
+  plt.ylabel('pdf(x)')
+  plt.legend()
+
+
+def plot_standard_deviations(stds, epochs, ylabel=None, xlabel=None):
+  fig = plt.figure(figsize=(15, 6))
+  plt.plot(epochs, stds)
+  if xlabel:
+    plt.xlabel(xlabel)
+  if ylabel:
+    plt.ylabel(ylabel)
+  plt.title('Standard Deviation Change across across epochs')
+  
+def visualize_weight_posterior_distribution(layer_idx, nets, epochs, tensor_idx=[0,0,0,0]):
+  layers = [net.layers[layer_idx] for net in nets]
+  qw_means = []
+  qw_stds = []
+  
+  for net in nets:
+    layer = net.layers[layer_idx]
+    ndim = len(layer.qw_mean.shape)
+    qw_mean = layer.qw_mean[tensor_idx[0], tensor_idx[1], tensor_idx[2], tensor_idx[3]].item() if ndim == 4 else layer.qw_mean[tensor_idx[0], tensor_idx[1]].item()
+    qw_means.append(qw_mean)
+    
+    alpha = torch.exp(layer.log_alpha).item()
+    qw_std = np.sqrt(1e-8 + alpha * (qw_mean**2))
+    qw_stds.append(qw_std)
+    
+  labels = ['epoch {}'.format(epoch) for epoch in epochs]
+  
+  qw_title = 'Posterior Distributions For Leyer {} Weight {} across epochs'.format(layer_idx, tensor_idx)
+  visualize_norm_dist(qw_means, qw_stds, labels, qw_title )
+  plot_standard_deviations(qw_stds, epochs)
+  
+  
+def visualize_output_distribution(layer_idx, nets, epochs, tensor_idx=[0,0,0,0]):
+  layers = [net.layers[layer_idx] for net in nets]
+  output_means = []
+  output_stds = []
+  
+  for net in nets:
+    layer = net.layers[layer_idx]
+    alpha = torch.exp(layer.log_alpha).item()
+    output_mean = layer.conv_qw_mean if hasattr(layer, 'conv_qw_mean') else layer.fc_qw_mean
+    ndim = len(output_mean.shape)
+    output_mean = output_mean[tensor_idx[0], tensor_idx[1], tensor_idx[2], tensor_idx[3]].item() if ndim == 4 else output_mean[tensor_idx[0], tensor_idx[1]].item()
+    output_means.append(output_mean)
+    
+    output_std = np.sqrt(1e-8 + alpha * (output_mean**2))
+    output_stds.append(output_std)
+    
+  labels = ['epoch {}'.format(epoch) for epoch in epochs]
+  
+  output_title = 'Distributions For Leyer {} Output {} across epochs'.format(layer_idx, tensor_idx)
+  visualize_norm_dist(output_means, output_stds, labels, output_title)
+  plot_standard_deviations(output_stds, epochs)
