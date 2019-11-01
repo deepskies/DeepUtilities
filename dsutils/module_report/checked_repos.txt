@@ -45,10 +45,25 @@ Alex:
   + deepmhd 
   - DeepQuasar
   - DeepStreams
+  - noise2self
+  - cosmoNODE 
+  - SemiSuperLensing
+  + hepedge 
+  + OptClusterSpec 
+  - deepartifact 
+  - OneClassLensing 
+  - ace
+  + deeperCMB 
+  + astroencoder 
+  - DataPreparation 
+  + deepmerge
+  - simcmb
+  - mluncertainties 
+  - DeepSkyPlanner 
+  + stronglensbnns
+ 
   
-  
-  
-   
+
   
   
   Brian:
