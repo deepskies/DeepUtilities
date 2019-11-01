@@ -757,3 +757,229 @@ def plot_mnist(X, y, X_embedded, name, min_dist=10.0):
     
    
 ''' SALIENCY MAPS: https://github.com/deepskies/deepmhd/blob/master/PB19_saliency_maps.ipynb'''
+
+''' https://github.com/deepskies/hepedge/blob/master/LArTPCmodelFiles/LArTPCmodel_build_train_evaluate.py  '''
+def show_confusion_matrix(validations, predictions):
+
+    matrix = metrics.confusion_matrix(validations, predictions)
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(matrix,
+                cmap="coolwarm",
+                linecolor='white',
+                linewidths=1,
+                xticklabels=LABELS,
+                yticklabels=LABELS,
+                annot=True,
+                fmt="d")
+    plt.title("Confusion Matrix")
+    plt.ylabel("True Label")
+    plt.xlabel("Predicted Label")
+    plt.show()
+    
+    
+ ''' https://github.com/deepskies/OptClusterSpec/blob/master/FullyConnectedV2.ipynb '''
+    
+  opt = Adam(lr = .0001)
+model.compile(loss = 'mse', optimizer = opt, metrics = ['mse', 'mae', 'mape', 'cosine']) #lower learning rate 
+    
+    print(history.history.keys())
+
+# summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+'''#zoom in
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylim(bottom = 0, top = .1)
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()'''
+
+# summarize history for mean_squared_error
+plt.plot(history.history['mean_squared_error'])
+plt.plot(history.history['val_mean_squared_error'])
+plt.title('mean_squared_error')
+plt.ylabel('mean_squared_error')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+
+# summarize history for mean_absolute_error
+plt.plot(history.history['mean_absolute_error'])
+plt.plot(history.history['val_mean_absolute_error'])
+plt.title('mean_absolute_error')
+plt.ylabel('mean_absolute_error')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+
+# summarize history for mean_absolute_percentage_error
+plt.plot(history.history['mean_absolute_percentage_error'])
+plt.plot(history.history['val_mean_absolute_percentage_error'])
+plt.title('mean_absolute_percentage_error')
+plt.ylabel('mean_absolute_percentage_error')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+
+# summarize history for cosine
+plt.plot(history.history['cosine_proximity'])
+plt.plot(history.history['val_cosine_proximity'])
+plt.title('cosine_proximity')
+plt.ylabel('cosine_proximity')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+
+dict_keys(['val_loss', 'val_mean_squared_error', 'val_mean_absolute_error', 'val_mean_absolute_percentage_error', 'val_cosine_proximity', 'loss', 'mean_squared_error', 'mean_absolute_error', 'mean_absolute_percentage_error', 'cosine_proximity'])
+
+''' https://github.com/deepskies/OptClusterSpec/blob/master/MLOpticalClusters_Mass_Calibration-RF.ipynb '''
+
+
+'''https://github.com/deepskies/OptClusterSpec/blob/master/MLOpticalClusters_Halo_Model-RF.ipynb'''
+
+#Plot actual Ngal vs. predicted Ngal.
+plt.hexbin(val_y, val_preds, bins='log')
+plt.ylabel('Predicted Central Galaxy Magnitude')
+plt.xlabel('MICECAT Central Galaxy Magnitude')
+#plt.xscale('log')
+#plt.yscale('log')
+line_x, line_y = np.arange(-23,-14,1), np.arange(-23,-14,1)
+plt.plot(line_x,line_y,'r--')
+plt.show()
+
+''' https://github.com/deepskies/deeperCMB   a lot of fancy code '''
+
+''' https://github.com/deepskies/astroencoder/blob/master/analysis/analysis.py '''
+ def plot_losses(self):
+        try:    
+            losses = np.loadtxt(self.modeldir + '/log.csv', delimiter=',',
+                                skiprows=1, unpack=True)
+            assert(len(losses) == 2*len(self.y_true)+4)
+        except IOError:
+            print('File log.csv with loss data not found. Loss not plotted.')
+            return None
+        except AssertionError:
+            print('File log.csv does not have the expected format. Loss not plotted.')
+            return None
+        
+        epochs = range(1, len(losses[0]) + 1) #start at 1
+        n = len(self.output_names)
+        
+        for i in range(n):
+            fig, axis1 = plt.subplots(figsize=(10,6))
+            plt.plot(epochs, losses[i+1], c = black, label='loss')
+            plt.plot(epochs, losses[n+i+3], c = orange, label="val loss")
+            plt.xlabel('Epoch')
+            plt.ylabel('Loss')
+            plt.ylim((min(min(losses[i+1]), min(losses[n+i+3]))-.1,
+                      1.2*max(losses[i+1,0],losses[n+i+3,0])))
+            plt.title("Loss History for %s" %self.output_names[i])
+            plt.legend(loc='upper right')
+            plt.tight_layout()
+            plt.savefig(self.modeldir+'/loss %s.png'%self.output_names[i])
+            plt.show()
+            
+        fig, axis1 = plt.subplots(figsize=(10,6))
+        plt.plot(epochs, losses[n+1], c = black, label = 'loss')
+        plt.plot(epochs, losses[2*n+3], c = orange, label = "val loss")
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.ylim((min(min(losses[n+1]), min(losses[2*n+3]))-.1,
+                  1.2*max(losses[n+1,0],losses[2*n+3,0])))
+        plt.title("Total Loss History")
+        plt.legend(loc='upper right')
+        plt.tight_layout()
+        plt.savefig(self.modeldir+'/loss.png')
+        plt.show()
+        plt.clf()
+        
+    def plot_random_samples(self, howmany):
+        samples = np.random.randint(self.y_true[0].shape[0], size = howmany)
+        
+        for ii in samples:
+            self.plot_sample(ii, savefig = True)
+            
+    def plot_sample(self, ii, savefig = False, colors = 'hot'):
+        n_in = self.x_in.shape[1]
+        n_out = len(self.y_true)
+        
+        plt.figure()
+            
+        for jj in range(n_in):
+            ax = plt.subplot(n_in,3,3*jj+1)
+            plt.imshow(self.x_in[ii,jj], cmap=colors)
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            ax.set_title('Input %s map'%self.input_names[jj])
+        for jj in range(n_out):
+            ax = plt.subplot(n_out,3,3*jj+2)
+            plt.imshow(self.y_true[jj][ii,0], cmap=colors)
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            ax.set_title('True %s map'%self.output_names[jj])
+            ax = plt.subplot(n_out,3,3*jj+3)
+            plt.imshow(self.y_pred[jj][ii,0], cmap=colors)
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            ax.set_title('Predicted %s map'%self.output_names[jj])
+        
+        if savefig:
+            plt.savefig(self.modeldir+'/samples %s.png'%ii)
+        plt.show()
+        plt.clf()
+        
+        # utility function for showing images
+def show_imgs(inputs, outputs, predicted=None, indices=range(10),filename=None,
+              npix=npix_default, output_as_list=True):
+    ins=inputs.shape[1]
+    if output_as_list: 
+        outs=len(outputs)
+    else:
+        outs=outputs.shape[1]
+    
+    if predicted is not None:
+        npics=ins+2*outs
+    else:
+        npics=ins+outs
+
+    n=len(indices) #you can provide a set of indices you'd like to see, or just see the first 10
+
+    plt.figure(figsize=(2*n, npics))
+
+    for i in range(n):
+        for j in range(ins):
+            ax = plt.subplot(npics, n, i+1+j*n)
+            plt.imshow(inputs[indices[i],j])
+            plt.gray(); ax.get_xaxis().set_visible(False); ax.get_yaxis().set_visible(False)
+
+        for j in range(outs):
+            ax = plt.subplot(npics, n, i+1+(ins+j)*n)
+            if output_as_list:
+                plt.imshow(outputs[j][indices[i],0])
+            else:
+                plt.imshow(outputs[indices[i],j])
+            plt.gray(); ax.get_xaxis().set_visible(False); ax.get_yaxis().set_visible(False)
+
+        if predicted is not None:
+            for j in range(outs):
+                ax = plt.subplot(npics, n, i+1+(ins+outs+j)*n)
+                if output_as_list:
+                    plt.imshow(predicted[j][indices[i],0])
+                else:
+                    plt.imshow(predicted[indices[i],j])
+                plt.gray(); ax.get_xaxis().set_visible(False); ax.get_yaxis().set_visible(False)
+
+    if filename is not None:
+        plt.savefig(filename+".png")
+    plt.show()
+    plt.clf()
+
+''' https://github.com/deepskies/deepmerge/blob/master/DeepMerge.ipynb '''
