@@ -61,9 +61,12 @@ Alex:
   - mluncertainties 
   - DeepSkyPlanner 
   + stronglensbnns
- 
+  + deepsz
+  - simlens
+  + HEPEdgeCloud 
+  + deepmerge
   
-
+  
+  ALL REPOS CHECKED!!!! 
   
   
-  Brian:
