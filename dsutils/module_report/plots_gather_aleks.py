@@ -1062,3 +1062,395 @@ def visualize_output_distribution(layer_idx, nets, epochs, tensor_idx=[0,0,0,0])
   output_title = 'Distributions For Leyer {} Output {} across epochs'.format(layer_idx, tensor_idx)
   visualize_norm_dist(output_means, output_stds, labels, output_title)
   plot_standard_deviations(output_stds, epochs)
+
+
+'''https://github.com/deepskies/deepsz/blob/master/Analysis/Analysis_caldeira_newdata.ipynb '''
+'''how F1 changes when probability treshold changes....we can do simillar or different scoring methods'''
+
+def get_F1(df, mass_thresh='2e14', xlim=None, method='cnn'):
+    if xlim is None:
+        xlim = (0.8, 0.999) if method == 'cnn' else (3., 30.)
+    col = f'score_wdust (trained>{mass_thresh})' if method == 'cnn' else 'mf_peaksig'
+    Fscore = lambda x: _get_Fbeta(df[f'Truth(>{mass_thresh})'], (df[col]>x).astype(int))
+    
+    f = plt.figure(figsize=(12, 4))
+    x = np.linspace(xlim[0], xlim[1])
+    y = [Fscore(xx) for xx in x]
+    plt.scatter(x, y)
+    plt.xlim(xlim)
+    plt.xlabel('%s thres'%("CNN prob" if method == 'cnn' else "MF S/N"), fontsize='xx-large')
+    plt.ylabel('F1_score', fontsize='xx-large')
+
+    plt.show(block=True)
+
+    '''preciion recall curves'''
+    def pr_curve_for_mf(min_mf=0, max_mf=100, mass_thresh='2e14', xlim=[-0.05,1.05]):
+    cut_df = merged_df[(merged_df['mf_peaksig'] > min_mf) & (merged_df['mf_peaksig'] < max_mf)].copy()
+    
+    cut_df.sort_values(by=['mf_peaksig'], inplace=True, ascending=False)
+    cut_df.reset_index(inplace=True, drop=True)
+    
+    index = cut_df.index.get_level_values(None)
+    n = len(cut_df)
+    n_true = np.sum(cut_df[f'Truth(>{mass_thresh})'])
+    tps = cut_df[f'Truth(>{mass_thresh})'].cumsum()
+    
+    precision = tps/(index+1)
+    recall = tps/n_true
+    proportion_tagged = (index+1)/n 
+
+    plt.plot(proportion_tagged, precision, label='Precision')
+    plt.plot(proportion_tagged, recall, label='Recall')
+
+    plt.xlabel('Proportion of cutouts tagged',fontsize='xx-large')
+    plt.xlim(xlim)
+    plt.legend()
+    plt.show()
+    
+    
+    ''' https://github.com/deepskies/deepsz/blob/master/utils/utils2.py '''
+    def eval(models, get_test_func, model_weight_paths=None, pred_only=False):
+    y_prob_avg = None
+    y_probs = []
+    x_test, y_test = get_test_func()
+    num_nets = len(models)
+    for i in range(num_nets):
+        model = models[i]
+        if model_weight_paths is not None:
+            model.load_weights(model_weight_paths[i])
+        y_prob = model.predict(x_test)
+        y_probs.append(y_prob.squeeze())
+        y_prob_avg = y_prob if y_prob_avg is None else y_prob + y_prob_avg
+    y_probs = np.stack(y_probs, 0)
+    y_prob_avg /= float(num_nets)
+    y_pred = (y_prob_avg > 0.5).astype('int32').squeeze() # binary classification
+    if pred_only:
+        return y_prob_avg
+    return summary_results_class(y_probs, y_test), y_pred, y_prob_avg, y_test, x_test, models
+
+def summary_results_class(y_probs, y_test, threshold=0.5, log_roc=False, show_f1=True):
+    """
+        y_probs: a list of independent predictions
+        y_test: true label
+        threshold: predict the image to be positive when the prediction > threshold
+    """
+    # measure confusion matrix
+    if show_f1:
+        threshold, maxf1 = get_F1(y_probs.mean(0),y_test)
+        threshold = threshold - 1e-7
+
+    cm = pd.DataFrame(0, index=['pred0','pred1'], columns=['actual0','actual1'])
+    cm_std = pd.DataFrame(0, index=['pred0', 'pred1'], columns=['actual0', 'actual1'])
+    #memorizing the number of samples in each case (true positive, false positive, etc.)
+    tp_rate, tn_rate = np.zeros(len(y_probs)), np.zeros(len(y_probs))
+    for actual_label in range(2):
+        for pred_label in range(2):
+            cnt = np.zeros(len(y_probs))
+            for i in range(len(y_probs)):
+                cnt[i] = np.sum(np.logical_and(y_test == actual_label, (y_probs[i] > threshold) == pred_label))
+            cm.loc["pred%d"%pred_label,"actual%d"%actual_label] = cnt.mean()
+            cm_std.loc["pred%d" % pred_label, "actual%d" % actual_label] = cnt.std()
+
+    print("Confusion matrix (cnts)",cm)
+    print("Confusion matrix (stdev of cnts)", cm_std)
+
+    #Measuring the true positive and negative rates, 
+    #since the false positive/negative rates are always 1 minus these, 
+    #they are not printed and have the same standard deviation
+    for i in range(len(y_probs)):
+        pred_i = y_probs[i] > threshold
+        tp_rate[i] = np.sum(np.logical_and(y_test==1, pred_i==1)) / np.sum(pred_i==1)
+        tn_rate[i] = np.sum(np.logical_and(y_test==0, pred_i==0)) / np.sum(pred_i == 0)
+    print("True Positive (rate): {0:0.4f} ({1:0.4f})".format(tp_rate.mean(), tp_rate.std()))
+    print("True Negative (rate): {0:0.4f} ({1:0.4f})".format(tn_rate.mean(), tn_rate.std()))
+    
+ def vertical_averaging_help(xs, ys, xlen=101):
+        """
+            Interpolate the ROC curves to the same grid on x-axis
+        """
+        numnets = len(xs)
+        xvals = np.linspace(0,1,xlen)
+        yinterp = np.zeros((len(ys),len(xvals)))
+        for i in range(numnets):
+            yinterp[i,:] = np.interp(xvals, xs[i], ys[i])
+        return xvals, yinterp
+    fprs, tprs = [], []
+    for i in range(len(y_probs)):
+        fpr, tpr, _ = metrics.roc_curve(y_test, y_probs[i], pos_label=1)
+        fprs.append(fpr)
+        tprs.append(tpr)
+    new_fprs, new_tprs = vertical_averaging_help(fprs, tprs)
+
+    # measure Area Under Curve (AUC)
+    y_prob_mean = y_probs.mean(0)
+    auc = metrics.roc_auc_score(y_test, y_prob_mean)
+    try:
+        auc = metrics.roc_auc_score(y_test, y_prob_mean)
+        print()
+        print("AUC:", auc)
+    except Exception as err:
+        print(err)
+        auc = np.nan
+        
+    #Take the percentiles for of the ROC curves at each point
+    new_tpr_mean, new_tpr_5, new_tpr_95 = new_tprs.mean(0), np.percentile(new_tprs, 95, 0), np.percentile(new_tprs, 5, 0)
+    # plot ROC curve
+    plt.figure(figsize=[12,8])
+    lw = 2
+    plt.plot(new_fprs, new_tpr_mean, color='darkorange',
+                lw=lw, label='ROC curve (area = %0.4f)' % metrics.auc(new_fprs, new_tpr_mean))
+    if len(y_probs) > 1:
+        plt.plot(new_fprs, new_tpr_95, color='yellow',
+                    lw=lw, label='ROC curve 5%s (area = %0.4f)' % ("%", metrics.auc(new_fprs, new_tpr_95)))
+        plt.plot(new_fprs, new_tpr_5, color='yellow',
+                    lw=lw, label='ROC curve 95%s (area = %0.4f)' % ("%", metrics.auc(new_fprs, new_tpr_5)))
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate', fontsize=16)
+    plt.ylabel('True Positive Rate', fontsize=16)
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right", fontsize=16)
+    plt.grid()
+    plt.show()
+
+    #If log flag is set, plot also the log of the ROC curves within some reasonable range
+    if log_roc:
+        # plot ROC curve
+        plt.figure(figsize=[12,8])
+        lw = 2
+        plt.plot(np.log(new_fprs), np.log(new_tpr_mean), color='darkorange',
+                    lw=lw, label='ROC curve (area = %0.4f)' % metrics.auc(new_fprs, new_tpr_mean))
+        if len(y_probs) > 1:
+            plt.plot(np.log(new_fprs), np.log(new_tpr_95), color='yellow',
+                        lw=lw, label='ROC curve 5%s (area = %0.4f)' % ("%", metrics.auc(new_fprs, new_tpr_95)))
+            plt.plot(np.log(new_fprs), np.log(new_tpr_5), color='yellow',
+                        lw=lw, label='ROC curve 95%s (area = %0.4f)' % ("%", metrics.auc(new_fprs, new_tpr_5)))
+        #plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([-5, -3])
+        plt.ylim([-1, 0.2])
+        plt.xlabel('Log False Positive Rate', fontsize=16)
+        plt.ylabel('Log True Positive Rate', fontsize=16)
+        plt.title('Receiver operating characteristic')
+        plt.legend(loc="lower right", fontsize=16)
+        plt.grid()
+        plt.show()
+    return (auc,maxf1) if show_f1 else auc, (tp_rate.mean(),tn_rate.mean()), new_fprs, new_tprs
+
+
+def get_F1(y_pred, y, xlim=None, method='cnn', mass_thresh='5e13'):
+    if xlim is None:
+        xlim = (0, 0.997)
+    col = f'score_wdust (trained>{mass_thresh})' if method == 'cnn' else 'mf_peaksig'
+    Fscore = lambda x: _get_Fbeta(y, (y_pred > x).astype(int))
+
+    f = plt.figure(figsize=(12, 4))
+    x = np.linspace(xlim[0], xlim[1])
+    y = np.asarray([Fscore(xx) for xx in x])
+    plt.scatter(x, y)
+    plt.xlim(xlim)
+    plt.xlabel('%s thres' % ("CNN prob" if method == 'cnn' else "MF S/N"), fontsize='xx-large')
+    plt.ylabel('F1_score', fontsize='xx-large')
+
+    plt.show(block=True)
+
+    return x[np.argmax(y)], np.max(y)
+
+def get_F1_CNN_and_MF(vdf, col_cnn='score_wdust (trained>%s)', col_mf ='mf_peaksig', col_label='Truth(>%s)', mass_thresh='5e13'):
+    import itertools
+    if mass_thresh == '5e13':
+        cnn_range = (0, 0.997)
+        mf_range = (3, 15)
+    else:
+        cnn_range = (0.4, 0.997)
+        mf_range = (3, 40)
+    cnn_range = np.linspace(cnn_range[0], cnn_range[1])
+    mf_range = np.linspace(mf_range[0], mf_range[1])
+    #criteria = itertools.product(cnn_range, mf_range)
+    criteria = [(c,m) for c in cnn_range for m in mf_range]
+    col_cnn, col_label = col_cnn%mass_thresh, col_label%mass_thresh
+    Fscore = lambda cc, mc: _get_Fbeta(vdf[col_label], (vdf[col_cnn]> cc).astype(int) * (vdf[col_mf]> mc).astype(int))
+    cnn_x = np.asarray([c[0] for c in criteria])
+    mf_y = np.asarray([c[1] for c in criteria])
+    vals = np.asarray([Fscore(cc,mc) for cc,mc in criteria])
+
+    cm = plt.cm.get_cmap('RdYlBu')
+    sc = plt.scatter(cnn_x, mf_y, c=vals, cmap=cm)
+    plt.colorbar(sc)
+    plt.xlabel("CNN_threshold")
+    plt.ylabel("MF_threshold")
+    return criteria[np.argmax(vals)], np.max(vals)
+
+
+''' https://github.com/deepskies/HEPEdgeCloud/blob/master/Azure_ResNet50/utils.py  '''
+############ PLOTTING FUNCTIONS ###############
+import matplotlib.pyplot as plt
+
+def plot_confusion_matrix(cm,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function modified to plots the ConfusionMatrix object.
+    Normalization can be applied by setting `normalize=True`.
+    
+    Code Reference : 
+    http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    
+    This script is derived from PyCM repository: https://github.com/sepandhaghighi/pycm
+    
+    """
+    import matplotlib.pyplot as plt
+    import itertools
+    import numpy as np
+    
+    plt_cm = []
+    for i in cm.classes:
+        row=[]
+        for j in cm.classes:
+            row.append(cm.table[i][j])
+        plt_cm.append(row)
+    plt_cm = np.array(plt_cm)
+    if normalize:
+        plt_cm = plt_cm.astype('float') / plt_cm.sum(axis=1)[:, np.newaxis]     
+    plt.imshow(plt_cm, interpolation='nearest', cmap=cmap)
+    plt.title(title, fontsize=20)
+    plt.colorbar()
+    tick_marks = np.arange(len(cm.classes))
+    plt.xticks(tick_marks, cm.classes, rotation=45)
+    plt.yticks(tick_marks, cm.classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = plt_cm.max() / 2.
+    for i, j in itertools.product(range(plt_cm.shape[0]), range(plt_cm.shape[1])):
+        plt.text(j, i, format(plt_cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if plt_cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('Actual', fontsize=16)
+    plt.xlabel('Predict', fontsize=16)
+
+def plot_acc_loss(figsize, num_plots, results, subplot_title_list, filename):
+    """
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import cm
+    import numpy as np
+    data_sizes = list(results.keys())
+
+    format_plot()
+    plt.figure(figsize=figsize)
+    plt.subplots_adjust(wspace=0.35)
+    y_axis = ["Loss", "Accuracy", "Auc"]
+    colors=['forestgreen', 'royalblue', 'crimson', 'darkorchid']
+    
+    color=iter(cm.tab10(np.linspace(0,1,len(results))))
+    j=0
+
+    for keys, values in results.items():
+        c=next(color)
+
+        #grabbing accuracy, loss, and auc info
+        for i in range(num_plots):
+            plt.subplot(1, 3, i+1)
+            # plotting training and validation per epoch for either accuracy, loss, or auc data
+            # dashed line = validation info
+            # solid line = training data
+            plt.plot(values[i],'-', color='seagreen', label='Training') #label=str(keys), color=colors[j])
+            plt.plot(values[i+3], '--', color='blue', label='Validation') #color=colors[j], label='Validation')
+            plt.title(subplot_title_list[i], fontsize=26)
+            plt.xlabel("Epoch", fontsize=20)
+            plt.ylabel(y_axis[i], fontsize=20)
+            plt.xticks(fontsize=16); plt.yticks(fontsize=16)
+            plt.legend()
+        j+=1
+
+    #plt.colorbar(data_sizes, axis=1, cmap=color, wspace=5)
+    plt.savefig(filename, bbox_inches='tight', transparent=True)
+    plt.show()
+    
+def plot_sample_img(data, labels, figsize, filename="Image_Sample.png", show=True):
+    """
+    Plots data where each row of the plot consists of the same image in different channels (bands)
+    Input:
+    - data: array, an array of shape [batch_size, channels, height, width] OR [batch_size, height, width, channels]
+    - labels: array, a 1D array of labels that match to the corresponding data
+    - figsize: tuple, the figure size of the main plot
+    - filename: string, saved filename
+    - show: boolean, whether you want to plt.show() your figure or just save it to your computer  
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    plt.figure(figsize=figsize)
+
+    counter = 1
+    num_imgs = len(data)
+
+    # if the image data is in the format [batch_size, channels, height, width]
+    if (data.shape)[1] < (data.shape)[3]:
+        num_bands = (data.shape)[1]
+    # if the image data is in the format [batch_size, height, width, channels]
+    else:
+        num_bands = (data.shape)[3]
+
+    for i in range(len(data)):
+        for j in range(num_bands):
+            #format plot horizontally
+            if num_bands == 1:
+                plt.subplot(num_bands, num_imgs, counter)
+            #format plot vertically
+            else:
+                plt.subplot(num_imgs, num_bands, counter)                
+            # if data format in shape [batch_size, channels, height, width]
+            if (data.shape)[1] < (data.shape)[3]:
+                plt.imshow(data[i][j], cmap='gray')
+            # if data format in shape [batch_size, height, width, channels]
+            else:
+                plt.imshow(data[i, :, :, j], cmap='gray')
+                
+            plt.title("Label: "+ str(labels[i]), fontsize=14)
+            counter += 1
+
+    plt.subplots_adjust(wspace=.35, hspace=.35)
+    plt.savefig(filename)
+    if (show): plt.show()    
+    
+
+    
+    ''' https://github.com/deepskies/deepmerge/blob/master/DeepMerge.ipynb '''
+    
+    
+
+# plot histogram
+bins = 50
+plt.hist(non, bins, alpha=0.9, label='non-mergers', color='red')
+plt.hist(past, bins, alpha=1, label='past mergers', color='deepskyblue')
+plt.hist(future, bins, alpha=1, label='future mergers', color='navy')
+plt.legend(loc='upper center')
+plt.xticks(np.arange(0.1, 1, step=0.1))
+plt.yticks(np.arange(0, 310, step=50))
+plt.xlabel("CNN Output")
+plt.show()
+
+
+
+
+# Plot 2D histogram of the distribution of all future mergers vs TP future mergers 
+#(stellar mass and the output probability)
+sns.set_style("white")
+plt.ylabel('CNN Output')
+plt.xlabel('Stellar Mass')
+plt.xlim(9.4, 11.8)
+plt.xticks([9.5, 10, 10.5, 11, 11.5])
+sns.kdeplot(logM_TP_future, prob_TP_future[:,0], cmap="RdGy",  n_levels=10)
+sns.kdeplot(logM_future, future[:,0], cmap="coolwarm", n_levels=10)
+
+r = sns.color_palette("RdGy")[0]
+b = sns.color_palette("coolwarm")[0]
+
+red_patch = mpatches.Patch(color=r, label='TP future mergers')
+blue_patch = mpatches.Patch(color=b, label='all future mergers')
+plt.legend(handles=[red_patch,blue_patch],loc='lower right')
+plt.show()
