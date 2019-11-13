@@ -1,0 +1,181 @@
+\documentclass{article}%
+\usepackage[T1]{fontenc}%
+\usepackage[utf8]{inputenc}%
+\usepackage{lmodern}%
+\usepackage{textcomp}%
+\usepackage{lastpage}%
+\usepackage[tmargin=1.5cm,lmargin=2.5cm]{geometry}%
+\usepackage{graphicx}%
+\usepackage{subcaption}%
+%
+%
+%
+\begin{document}%
+\normalsize%
+\section*{CLASSIFICATION REPORT}%
+\label{sec:CLASSIFICATIONREPORT}%
+\subsection*{Architecture of the Neural Network}%
+\label{subsec:ArchitectureoftheNeuralNetwork}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=200px]{images/model.pdf}%
+\end{figure}
+
+%
+\subsection*{TP/FP/TN/FN Test Set Examples}%
+\label{subsec:TP/FP/TN/FNTestSetExamples}%
+TP {-} true positives, TN {-} true negatives, FP {-} false positives, FN {-} False negaties%
+
+
+\begin{figure}[h!]%
+\centering%
+\begin{subfigure}[c]{0.33\linewidth}%
+\includegraphics[width=0.95\linewidth]{images/examples1.pdf}%
+\caption{Examples of TP}%
+\end{subfigure}%
+\begin{subfigure}[c]{0.33\linewidth}%
+\includegraphics[width=0.95\linewidth]{images/examples2.pdf}%
+\caption{Examples of FP}%
+\end{subfigure}%
+\end{figure}
+
+%
+
+
+\begin{figure}[h!]%
+\centering%
+\begin{subfigure}[c]{0.33\linewidth}%
+\includegraphics[width=0.95\linewidth]{images/examples1.pdf}%
+\caption{Examples of TN}%
+\end{subfigure}%
+\begin{subfigure}[c]{0.33\linewidth}%
+\includegraphics[width=0.95\linewidth]{images/examples2.pdf}%
+\caption{Examples of FN}%
+\end{subfigure}%
+\end{figure}
+
+%
+\subsection*{Comparison of True Labes and Output Values for Test Set:}%
+\label{subsec:ComparisonofTrueLabesandOutputValuesforTestSet}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=200px]{images/true_pred.pdf}%
+\end{figure}
+
+%
+\subsection*{Training and Validation Loss and Accuracy:}%
+\label{subsec:TrainingandValidationLossandAccuracy}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=260px]{images/loss_acc.pdf}%
+\end{figure}
+
+%
+\subsection*{Test Set Precission and Recall:}%
+\label{subsec:TestSetPrecissionandRecall}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=260px]{images/prec_recall.pdf}%
+\end{figure}
+
+%
+\subsection*{Test Set Confusion Matrix}%
+\label{subsec:TestSetConfusionMatrix}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=210px]{images/conf.pdf}%
+\end{figure}
+
+%
+\subsection*{Classification Scoring for Test Set}%
+\label{subsec:ClassificationScoringforTestSet}%
+TP {-} true positives, TN {-} true negatives, FP {-} false positives, FN {-} False negaties \newline%
+\newline%
+%
+The performance of a classifier can be described by:\newline%
+%
+\textbf{Accuracy }%
+ {-} (TP+TN)/(TP+TN+FP+FN) \newline%
+%
+\textbf{Precision }%
+ (Purity, Positive Predictive Value) {-} TP/(TP+FP) \newline%
+%
+\textbf{Recall }%
+ (Completeness, True Positive Rate {-} TP/(TP+FN) \newline%
+ %
+\textbf{F1 Score }%
+ = 2 (Precision * Recall)/(Precision + Recall).\newline%
+%
+\textbf{Brier Score }%
+ {-} mean squared error (MSE) between predicted probabilities (between 0 and 1) and the expected values (0 or 1). Brier score summarizes the magnitude of the forecasting error and takes a value between 0 and 1 (with better models having score close to 0).\newline%
+\newline%
+%
+\begin{tabular}{|l|l|}%
+\hline%
+\textbf{Metric}&\textbf{Score}\\%
+\hline%
+Accuracy&0.75\\%
+Precision&0.8\\%
+Recall&0.85\\%
+F1 Score&0.01\\%
+Brier Score&0.1\\%
+\hline%
+\end{tabular}%
+\newline%
+\newline%
+
+%
+\subsection*{Reciever Operating Characteristic (ROC) and Area Under the Curve (AUC) for Test Set}%
+\label{subsec:RecieverOperatingCharacteristic(ROC)andAreaUndertheCurve(AUC)forTestSet}%
+The ROC curve graphically shows the trade{-}off between between true{-}positive rate and false{-}positive rate.The AUC summarizes the ROC curve {-} where the AUC is close to unity, classification is successful, while an AUC of 0.5 indicates the model is performs as well as a random guess.%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=220px]{images/ROC.pdf}%
+\hspace*{2cm}%
+\begin{large}%
+AUC = 0.75\newline%
+\newline%
+\newline%
+\newline%
+\newline%
+\newline%
+\newline%
+\newline%
+%
+\end{large}%
+\end{figure}
+
+%
+\subsection*{Histogram of the Output Probabilities for Test Set}%
+\label{subsec:HistogramoftheOutputProbabilitiesforTestSet}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=230px]{images/histogram.pdf}%
+\end{figure}
+
+%
+\subsection*{2D Histogram of the Output vs One Object Feature for Test Set}%
+\label{subsec:2DHistogramoftheOutputvsOneObjectFeatureforTestSet}%
+
+
+\begin{figure}[h!]%
+\centering%
+\includegraphics[width=230px]{images/2Dhistogram.pdf}%
+\end{figure}
+
+%
+\end{document}
