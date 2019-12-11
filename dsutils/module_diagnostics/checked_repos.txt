@@ -1,0 +1,72 @@
+'''' - if there are no usful plotting functions, + if there are ''''
+
+Alex:
+  - LensPop
+  - einsteniangema
+  + stronglenses
+  + deeplensing-old
+  - deeplenspop
+  - leqsearch
+    unsupervisedlensing (cannot opet notebooks)
+  + tlens
+  - deepcosmos
+  - lensometer
+  - DNNStrategies
+  - gplens
+  - skyrings
+  - DeepQSO
+  - DeepPhysicsModel
+  - DeepLensingMeasurement (cannot opt in google colab)
+  - sandbox
+  - test
+  - Test1
+  - test2
+  - deblensed
+  - GCEDeblendProto
+  - tf-probability
+  - cosmonet
+  - nn
+  - subhalo
+  - BHFinder
+  - Lens-Cosmology
+  - deepweb
+  - deeptransfer
+  - deepskycadence
+  - DeepSkiesDQN 
+  - deeplensing
+  - AutoSL
+  - OptClusterPhot 
+  - SimplePhysicalImage 
+  - DeepDiagnostic 
+  - deeplenstronomy
+  - saliency
+  - DistributedTraining 
+  - deeplenstronomy_extensions
+  + deepmhd 
+  - DeepQuasar
+  - DeepStreams
+  - noise2self
+  - cosmoNODE 
+  - SemiSuperLensing
+  + hepedge 
+  + OptClusterSpec 
+  - deepartifact 
+  - OneClassLensing 
+  - ace
+  + deeperCMB 
+  + astroencoder 
+  - DataPreparation 
+  + deepmerge
+  - simcmb
+  - mluncertainties 
+  - DeepSkyPlanner 
+  + stronglensbnns
+  + deepsz
+  - simlens
+  + HEPEdgeCloud 
+  + deepmerge
+  
+  
+  ALL REPOS CHECKED!!!! 
+  
+  
