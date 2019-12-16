@@ -8,7 +8,8 @@ def report (model=False,
             roc_auc=False, 
             auc_pr=False, 
             hist=False, 
-            hist2D=False):
+            hist2D=False,
+            name=False):
     
     import numpy as np
     import os
@@ -35,12 +36,9 @@ def report (model=False,
         
         # plot some example images
         if examples==True:
-            if (os.path.exists('images/examples1.pdf') and os.path.exists('images/examples2.pdf') 
-            and os.path.exists('images/examples3.pdf') and os.path.exists('images/examples4.pdf')):
-                example_TP = 'images/examples1.pdf'
-                example_FP = 'images/examples2.pdf'
-                example_TN = 'images/examples3.pdf'
-                example_FN = 'images/examples4.pdf'
+            if (os.path.exists('images/TP.pdf') and os.path.exists('images/TN.pdf')): 
+                example_TP = 'images/TP.pdf'
+                example_TN = 'images/TN.pdf'
                 with doc.create(Subsection('TP/FP/TN/FN Test Set Examples', numbering=0)):
                     doc.append('TP - true positives, TN - true negatives, FP - false positives, FN - False negaties')
                     with doc.create(Figure(position='h!')) as imagesRow1:
@@ -51,16 +49,19 @@ def report (model=False,
                             left_image.add_caption("Examples of TP")
                 
                         with doc.create(
-                            SubFigure(position='c', width=NoEscape(r'0.33\linewidth'))) as right_image:
-                            right_image.add_image(example_FP, width=NoEscape(r'0.95\linewidth'))
-                            right_image.add_caption("Examples of FP")
+                            SubFigure(position='c',  width=NoEscape(r'0.33\linewidth'))) as right_image:
+                            right_image.add_image(example_TN, width=NoEscape(r'0.95\linewidth'))
+                            right_image.add_caption("Examples of TN")
                 
+                if (os.path.exists('images/FP.pdf') and os.path.exists('images/FN.pdf')):
+                    example_FP = 'images/FP.pdf'
+                    example_FN = 'images/FN.pdf'
                     with doc.create(Figure(position='h!')) as imagesRow2:
                         doc.append(Command('centering'))  
                         with doc.create(
                             SubFigure(position='c',  width=NoEscape(r'0.33\linewidth'))) as left_image:
-                            left_image.add_image(example_TN, width=NoEscape(r'0.95\linewidth'))
-                            left_image.add_caption("Examples of TN")
+                            left_image.add_image(example_FP, width=NoEscape(r'0.95\linewidth'))
+                            left_image.add_caption("Examples of FP")
                 
                         with doc.create(
                             SubFigure(position='c', width=NoEscape(r'0.33\linewidth'))) as right_image:
@@ -97,7 +98,11 @@ def report (model=False,
             if os.path.exists('images/prec_recall.pdf'):
                 pr_rec = 'images/prec_recall.pdf'
                 with doc.create(Subsection('Test Set Precission and Recall:', numbering=0)):
-                    doc.append('''Precision/Recall curve shows the trade-off between returning accurate results (high precision), as well as returning a majority of all positive results (high recall) for different tresholds. It should be used when class imbalance problem occurs. A model with perfect classification skill is depicted as a point at (1,1). Area Under the Curve (AUC) for the perfect classifier will be 1.''')
+                    doc.append('''Precision/Recall curve shows the trade-off between returning 
+                        accurate results (high precision), as well as returning a majority of all positive results (high 
+                        recall) for different tresholds. It should be used when class imbalance problem occurs. A model with 
+                        perfect classification skill is depicted as a point at (1,1). Area Under the Curve (AUC)
+                        for the perfect classifier will be 1.''')
                     with doc.create(Figure(position='h!')) as pre_recall:
                         pre_recall.add_image(pr_rec, width='220px')
                         doc.append(HorizontalSpace("2cm"))
@@ -140,7 +145,9 @@ def report (model=False,
                     doc.append(bold('F1 Score '))
                     doc.append(' = 2 (Precision * Recall)/(Precision + Recall).\n')
                     doc.append(bold('Brier Score '))
-                    doc.append(''' - mean squared error (MSE) between predicted probabilities (between 0 and 1) and the expected values (0 or 1). Brier score summarizes the magnitude of the forecasting error and takes a value between 0 and 1 (with better models having score close to 0).\n\n''')
+                    doc.append(''' - mean squared error (MSE) between predicted probabilities (between 0 and 1) and the 
+                        expected values (0 or 1). Brier score summarizes the magnitude of the forecasting error and takes a 
+                        value between 0 and 1 (with better models having score close to 0).\n\n''')
                     with doc.create(Tabular('|l|l|')) as table:
                         table.add_hline()
                         table.add_row((bold('Metric'), bold('Score')))
@@ -196,6 +203,8 @@ def report (model=False,
             else:
                 print("2D Histogram image not found! Skipping.")  
                 
-                
-    doc.generate_pdf('report', clean_tex=False)
+    if name==False:            
+        doc.generate_pdf('report', clean_tex=False)
+    else:
+        doc.generate_pdf(name, clean_tex=False)
     return
