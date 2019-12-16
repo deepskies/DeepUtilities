@@ -62,10 +62,12 @@ from pylatex.utils import italic, bold
 
 # rewrite to plot all 4 images TP,TN/FP,FN
 
-def examples_plot(images, nrows, ncols):#WORKS
+def examples_plot(images, nrows, ncols, name=False):#WORKS
 # ------------------------------------------------------------------------------
 # Funciton plots images given in examples
 # ------------------------------------------------------------------------------
+    from matplotlib.colors import LogNorm
+    folder = "images/"
     fig1=plt.figure(figsize=(5,5))
     for i, image in enumerate(images):
         plt.subplot(nrows, ncols, i + 1)
@@ -73,7 +75,10 @@ def examples_plot(images, nrows, ncols):#WORKS
         plt.imshow(image, aspect='auto', cmap='viridis', norm=LogNorm())
     plt.subplots_adjust(hspace=0, wspace=0)
     plt.show()
-    plt.savefig('images/examples1.pdf')
+    if name==False:
+        fig1.savefig('images/example.pdf')
+    else:
+        fig1.savefig(folder+name)   
     return
 
 
