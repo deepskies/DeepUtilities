@@ -10,6 +10,7 @@ from numpy import random
 from scipy import interp
 
 # keras
+import tensorflow as tf
 from keras.models import model_from_json
 from keras.utils import np_utils
 from keras import backend as K
@@ -22,13 +23,13 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import auc
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import brier_score_loss
 from scipy.stats import sem
-
 
 #model plotting
 import pydotplus
@@ -48,19 +49,7 @@ from vis.visualization import visualize_cam
 from vis.utils import utils
 from sklearn.metrics import precision_recall_curve
 
-# reporting
-from pylatex import Document, Section, Subsection, Tabular, Math, TikZ, Axis, FlushLeft, MediumText
-from pylatex import Plot, Figure, Matrix, Alignat, MultiColumn, Command, SubFigure, NoEscape, HorizontalSpace
-from pylatex.utils import italic, bold
 
-##############################################################
-##############################################################
-
-
-
-
-
-# rewrite to plot all 4 images TP,TN/FP,FN
 
 def examples_plot(images, nrows, ncols, name=False):#WORKS
 # ------------------------------------------------------------------------------
@@ -94,7 +83,7 @@ def load_plot_model(json_file):#WORKS
 
     keras.utils.vis_utils.pydot = pydotplus
     keras.utils.plot_model(loaded_model, to_file='images/model.pdf', show_shapes=True)
-    return
+    return 
 
 
 
@@ -161,7 +150,7 @@ def prec_recall_plot(y_test, probability):#WORKS!
 # Funciton plots a combined precision and recall plot for training and validation set
 # ------------------------------------------------------------------------------
     precision, recall, thresholds = precision_recall_curve(y_test, probability)
-    auc = auc(recall, precision)
+    AUC = auc(recall, precision)
 
     figsize=(6,4)
     plt.plot(precision, recall, 'r')
@@ -170,7 +159,7 @@ def prec_recall_plot(y_test, probability):#WORKS!
     plt.ylabel('Precision')
     plt.tight_layout()
     plt.savefig('images/prec_recall.pdf')
-    return auc
+    return AUC
 
 
 def conf_matrix(y_true, y_pred, normalize=False, cmap=plt.cm.Blues):#WORKS!
@@ -282,29 +271,41 @@ def CM_ROC(x_test,y_test, loaded_model):#WORKS but not needed (I need to add ROC
     return prob, pred, auc
 
 
+def indices_to_one_hot(data, nb_classes):
+# ------------------------------------------------------------------------------
+# In case of multiclass problems convert labels to one hot encoding
+# ------------------------------------------------------------------------------    
+    """Convert an iterable of indices to one-hot encoded labels."""
+    targets = np.array(data).reshape(-1)
+    return np.eye(nb_classes)[targets]
 
-def scores(y_test, probability, prediction):#WORKS
+
+def scores(y_test, probability, prediction, avg=None, num_classes=None):#WORKS
 # ------------------------------------------------------------------------------
 # Evaluate classificaiton
 # Outputs the accuracy, precision, recall, f1 score, brier score of classificaiton
 # ------------------------------------------------------------------------------
     # accuracy: (tp + tn) / (p + n)
     accuracy = accuracy_score(y_test, prediction)
-    print('Accuracy: %f' % accuracy)
+    print('Accuracy: %.2f' % accuracy)
     # precision tp / (tp + fp)
-    precision = precision_score(y_test, prediction)
-    print('Precision: %f' % precision)
+    precision = precision_score(y_test, prediction, average=avg)
+    print('Precision: %.2f' % precision)
     # recall: tp / (tp + fn)
-    recall = recall_score(y_test, prediction)
-    print('Recall: %f' % recall)
+    recall = recall_score(y_test, prediction, average=avg)
+    print('Recall: %.2f' % recall)
     # f1: 2 tp / (2 tp + fp + fn)
-    f1 = f1_score(y_test, prediction)
-    print('F1 score: %f' % f1)
+    f1 = f1_score(y_test, prediction, average=avg)
+    print('F1 score: %.2f' % f1)
     #brier score
-    br = brier_score_loss(y_test, probability)
-    print('Brier score is: %f' % br)
+    if len(y_test)==1:
+        br = brier_score_loss(y_test, probability)
+    else:
+        y_test_one_hot = indices_to_one_hot(y_test, num_classes)
+        br = np.mean(np.sum((probability - y_test_one_hot)**2, axis=1))
+    print('Brier score is: %.2f' % br)
     scoring = np.array([accuracy, precision, recall, f1, br])
-    np.save('images/scoring.npy',scoring)
+    np.save('images/scoring.npy', scoring)
     return accuracy, precision, recall, f1, br
 
 
