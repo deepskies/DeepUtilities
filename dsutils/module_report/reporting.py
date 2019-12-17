@@ -28,8 +28,8 @@ def report (model=False,
             if os.path.exists('images/model.pdf'):
                 model = 'images/model.pdf'
                 with doc.create(Subsection('Architecture of the Neural Network', numbering=0)):
-                    with doc.create(Figure(position='h!')) as loss_acc:
-                        loss_acc.add_image(model, width='200px')   
+                    with doc.create(Figure(position='!htb')) as loss_acc:
+                        loss_acc.add_image(model, width=NoEscape(r'0.65\textheight'))   
             else:
                 print("Model architecture image not found! Skipping.")
                           
@@ -41,7 +41,7 @@ def report (model=False,
                 example_TN = 'images/TN.pdf'
                 with doc.create(Subsection('TP/FP/TN/FN Test Set Examples', numbering=0)):
                     doc.append('TP - true positives, TN - true negatives, FP - false positives, FN - False negaties')
-                    with doc.create(Figure(position='h!')) as imagesRow1:
+                    with doc.create(Figure(position='!htb')) as imagesRow1:
                         doc.append(Command('centering'))  
                         with doc.create(
                             SubFigure(position='c',  width=NoEscape(r'0.33\linewidth'))) as left_image:
@@ -56,7 +56,7 @@ def report (model=False,
                 if (os.path.exists('images/FP.pdf') and os.path.exists('images/FN.pdf')):
                     example_FP = 'images/FP.pdf'
                     example_FN = 'images/FN.pdf'
-                    with doc.create(Figure(position='h!')) as imagesRow2:
+                    with doc.create(Figure(position='!htb')) as imagesRow2:
                         doc.append(Command('centering'))  
                         with doc.create(
                             SubFigure(position='c',  width=NoEscape(r'0.33\linewidth'))) as left_image:
@@ -75,8 +75,8 @@ def report (model=False,
         if tr_pr==True:
             if os.path.exists('images/true_pred.pdf'):
                 true_pred = 'images/true_pred.pdf'
-                with doc.create(Subsection('Comparison of True Labes and Output Values for Test Set:', numbering=0)):
-                    with doc.create(Figure(position='h!')) as tr_pr:
+                with doc.create(Subsection('Comparison of True Labes and Output Values for Test Set', numbering=0)):
+                    with doc.create(Figure(position='!htb')) as tr_pr:
                         tr_pr.add_image(true_pred, width='200px')         
             else:
                 print("Image comparing true labes and output values not found! Skipping.")
@@ -86,8 +86,8 @@ def report (model=False,
         if lo_acc==True:
             if os.path.exists('images/loss_acc.pdf'):
                 lo_acc = 'images/loss_acc.pdf'
-                with doc.create(Subsection('Training and Validation Loss and Accuracy:', numbering=0)):
-                    with doc.create(Figure(position='h!')) as loss_acc:
+                with doc.create(Subsection('Training and Validation Loss and Accuracy', numbering=0)):
+                    with doc.create(Figure(position='!htb')) as loss_acc:
                         loss_acc.add_image(lo_acc, width='260px')            
             else:
                 print("Loss Accuracy plot not found! Skipping.")          
@@ -97,13 +97,13 @@ def report (model=False,
         if pr_rec==True:
             if os.path.exists('images/prec_recall.pdf'):
                 pr_rec = 'images/prec_recall.pdf'
-                with doc.create(Subsection('Test Set Precission and Recall:', numbering=0)):
+                with doc.create(Subsection('Test Set Precission and Recall', numbering=0)):
                     doc.append('''Precision/Recall curve shows the trade-off between returning 
                         accurate results (high precision), as well as returning a majority of all positive results (high 
                         recall) for different tresholds. It should be used when class imbalance problem occurs. A model with 
                         perfect classification skill is depicted as a point at (1,1). Area Under the Curve (AUC)
                         for the perfect classifier will be 1.''')
-                    with doc.create(Figure(position='h!')) as pre_recall:
+                    with doc.create(Figure(position='!htb')) as pre_recall:
                         pre_recall.add_image(pr_rec, width='220px')
                         doc.append(HorizontalSpace("2cm"))
                         doc.append(MediumText('AUC = '+ str(auc_pr)))   
@@ -116,18 +116,16 @@ def report (model=False,
             if os.path.exists('images/conf.pdf'):
                 conf_matrix = 'images/conf.pdf'
                 with doc.create(Subsection('Test Set Confusion Matrix', numbering=0)):
-                    with doc.create(Figure(position='h!')) as conf:
-                        conf.add_image(conf_matrix, width='210px')
+                    with doc.create(Figure(position='!htb')) as conf:
+                        conf.add_image(conf_matrix, width='230px')
             else:
                 print("Confusion matrix not found! Skipping.")
                         
                 
         # all scoring matrics       
         if score==True:
-            if (os.path.exists('images/scoring.npy') and os.path.exists('images/auc.npy')):
+            if os.path.exists('images/scoring.npy'):
                 scoring = np.load('images/scoring.npy')
-                auc_save = np.load('images/auc.npy')
-                auc = auc_save
                 acc = scoring[0]
                 precision = scoring[1]
                 recall = scoring[2]
@@ -152,11 +150,11 @@ def report (model=False,
                         table.add_hline()
                         table.add_row((bold('Metric'), bold('Score')))
                         table.add_hline()
-                        table.add_row(('Accuracy', auc))
-                        table.add_row(('Precision', precision))
-                        table.add_row(('Recall', recall))
-                        table.add_row(('F1 Score',f1))
-                        table.add_row(('Brier Score', brier))
+                        table.add_row(('Accuracy', '%.2f' %acc))
+                        table.add_row(('Precision', '%.2f' %precision))
+                        table.add_row(('Recall', '%.2f' %recall))
+                        table.add_row(('F1 Score','%.2f' %f1))
+                        table.add_row(('Brier Score', '%.2f' %brier))
                         table.add_hline()
                     doc.append('\n\n')
             else:
@@ -174,7 +172,7 @@ def report (model=False,
                     true-positive rate and false-positive rate.The AUC summarizes the ROC curve - where the 
                     AUC is close to unity, classification is successful, while an AUC of 0.5 indicates the 
                     model is performs as well as a random guess.''')
-                    with doc.create(Figure(position='h!')) as roc_curve: 
+                    with doc.create(Figure(position='!htb')) as roc_curve: 
                         roc_curve.add_image(roc, width='220px')  
                         doc.append(HorizontalSpace("2cm"))
                         doc.append(MediumText('AUC = '+ str(auc)+'\n\n\n\n\n\n\n\n'))
@@ -187,7 +185,7 @@ def report (model=False,
             if os.path.exists('images/histogram.pdf'):
                 hist = 'images/histogram.pdf'
                 with doc.create(Subsection('Histogram of the Output Probabilities for Test Set', numbering=0)):
-                    with doc.create(Figure(position='h!')) as histogram:
+                    with doc.create(Figure(position='!htb')) as histogram:
                         histogram.add_image(hist, width='230px')
             else:
                 print("Histogram image not found! Skipping.")       
@@ -198,7 +196,7 @@ def report (model=False,
             if os.path.exists('images/2Dhistogram.pdf'):
                 hist_2d = 'images/2Dhistogram.pdf'
                 with doc.create(Subsection('2D Histogram of the Output vs One Object Feature for Test Set', numbering=0)):
-                    with doc.create(Figure(position='h!')) as histogram_2d:
+                    with doc.create(Figure(position='!htb')) as histogram_2d:
                         histogram_2d.add_image(hist_2d, width='230px')
             else:
                 print("2D Histogram image not found! Skipping.")  
