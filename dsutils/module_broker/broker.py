@@ -1,8 +1,5 @@
-
-
-
 # how to check if a module isn't being called; if not, where does the data come from.
-
+# do we use the TT thing from Tensorflow?
 
 import module_io
 import module_model
@@ -24,7 +21,7 @@ model = module_train(data_input, model)
 # evaluate model
 data_evaluation = module_evaluate(model, data_input)
 
-# read data out of evaluation
+# read evaluations
 data_evaluation = module_io.read_data()
 
 # create diagnostic object
