@@ -9,7 +9,6 @@ data/
 .ipynb_checkpoints/
 .vscode/
 
-*.png
 
 dsutils.egg-info/
 
