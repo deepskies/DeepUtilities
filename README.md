@@ -1,7 +1,6 @@
-# DeepBench
+# DeepUtilities
 
 ![DeepUtilities Logo](DeepSkies_Logos_DeepUtilities_v0.png)
-![Example Image of pipeline](DeepUtilities_Schematic.png)
 
 ### What is it?
 Pipeline for developing, training, and diagnosing machine learning algorithms
@@ -25,6 +24,8 @@ Pipeline for developing, training, and diagnosing machine learning algorithms
 
 
 ## Example
+![Example Image of pipeline](DeepUtilities_Schematic.png)
+
 
 
 ## Pipeline Flow
@@ -32,13 +33,8 @@ Pipeline for developing, training, and diagnosing machine learning algorithms
 2. Pre-process
 3. Train
 4. Test
-5. Diagnose
-
-
-## Pipeline Elements
-1. Ingest data
-2. Data/Model API
-3. Track Experiments
+5. Evalute
+6. Report
 
 
 ## Original Development Team
