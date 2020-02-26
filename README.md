@@ -2,7 +2,7 @@
 
 ### What is it?
 Simulation library for very simple simulations to *benchmark* machine learning algorithms.
-![Example Image of pipeline](/repository_support/images/DeepSkies_Logos_DeepBench.png) Format: ![Alt Text](url)
+![Example Image of pipeline](/repository_support/images/DeepSkies_Logos_DeepUtilities_v0.png) Format: ![Alt Text](url)
 
 
 ### Why do we need it? Why is it useful?
@@ -23,7 +23,7 @@ Simulation library for very simple simulations to *benchmark* machine learning a
 
 
 ## Example
-![Example Image of pipeline](/repository_support/images/example_simplephysicalimage.png) Format: ![Alt Text](url)
+![Example Image of pipeline](/repository_support/images/DeepUtilities_Schematic.png) Format: ![Alt Text](url)
 
 
 ## Planned Features
