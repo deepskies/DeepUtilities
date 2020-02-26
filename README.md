@@ -1,63 +1,64 @@
 # DeepBench
 
 ### What is it?
-Simulation library for very simple simulations to *benchmark* machine learning algorithms.
-![Example Image of pipeline](/repository_support/images/DeepSkies_Logos_DeepUtilities_v0.png) Format: ![Alt Text](url)
+Pipeline for developing, training, and diagnosing machine learning algorithms
+![Example Image of pipeline](/repository_support/images/DeepSkies_Logos_DeepUtilities.png) 
 
 
 ### Why do we need it? Why is it useful?
-1. There are very universally recognized scientifically meaningful benchmark data sets, or methods with which to generate them.
-2. A very simple data set will have objects, patterns, and signals that are intuitively quanitifiable and will be fast to generate.
-3. A very simple data set will be a great testing ground for new networks and for newcomers to practice with the technology.
+1. There are standard methods for pre-processing, training, and diagnosing algorithms; why should everyone reinvent the wheel every time?
+2. Let's standardize and grow the library of diagnostics for science analyses with machine learning!
+
+
+## General Features
+1. modularity - replaceable/extensible pipeline elements
+2. fully connected pipeline elements
+3. good for both TensorFlow and PyTorch
+
 
 
 ## Requirements
 1. python 3.x
-2. matplotlib
-
-
-## General Features
-1. very fast to generate
-2. Mimics in a very basic / toy way what is in astro images
-3. Be fully controllable parametrically
+2. more, but not sure yet.
 
 
 ## Example
-![Example Image of pipeline](/repository_support/images/DeepUtilities_Schematic.png) Format: ![Alt Text](url)
+![Example Image of pipeline](/repository_support/images/DeepUtilities_Schematic.png) 
 
 
-## Planned Features
-1. Kinds of data to mimic
-	1. Strong lenses: Arcs, circles
-	2. Supernovae: light curves
-	3. Quasars: Skewed Sine wave
-	4. N-body simulations: Points in 2D and 3D and in lightcones
-	5. Galaxy clusters: Optical - points and 2d kernels; SZ - blurred circles; X-ray - blurred circles
-	6. Spectra (stellar, galactic)
-	7. Noise: photon, psf
-2. Dimensions of data
-	1. point / graph
-	2. 1D, 2D, 3D, 4D (space-time), 6D (phase space)
-	3. Shapes: Polygons, Circles, squares, Polyhedrons, Spheres, cubes
-3. Top Data Sets for Initial Release:
-	1. Strong lenses
-	2. Light curves
+## Pipeline Flow
+1. Ingest
+2. Pre-process
+3. Train
+4. Test
+5. Diagnose
+
+
+## Pipeline Elements
+1. Ingest data
+2. Data/Model API
+3. Track Experiments
 
 
 ## Original Development Team
-1. Craig Brechmos
-2. Renee Hlozek
-3. Brian Nord
+1. Praveen Balaji
+2. Joao Caldeira
+3. Callista Christ
+4. Aleksandra Ciprijanovic
+5. Anand Jain
+6. Francois Lanusse
+7. Brian Nord
+8. Marwah Roussi
+9. Amanda Whaley
 
 
 ## How to contribute
 I'm really glad you're reading this, because we need volunteer developers to help this project come to fruition.
 
-### Testing
 
 ### Submitting changes
 
-Please send a [GitHub Pull Request to simplephysicaliage](https://github.com/deepskies/SimplePhysicalImage/pull/new/master) with a clear list of what you've done (read more about [pull requests](http://help.github.com/pull-requests/)). When you send a pull request, we will love you forever if you include examples. We can always use more test coverage. Please follow our coding conventions (below) and make sure all of your commits are atomic (one feature per commit).
+Please send a [GitHub Pull Request to DeepUtilities](https://github.com/deepskies/DeepUtilities/pull/new/master) with a clear list of what you've done (read more about [pull requests](http://help.github.com/pull-requests/)). When you send a pull request, we will love you forever if you include examples. We can always use more test coverage. Please follow our coding conventions (below) and make sure all of your commits are atomic (one feature per commit).
 
 Always write a clear log message for your commits. One-line messages are fine for small changes, but bigger changes should look like this:
 
