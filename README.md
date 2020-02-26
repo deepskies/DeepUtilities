@@ -1,7 +1,7 @@
 # DeepBench
 
-![DeepUtilities Logo](/repository_support/images/DeepSkies_Logos_DeepUtilities_v0.png)
-![Example Image of pipeline](/repository_support/images/DeepUtilities_Schematic.png)
+![DeepUtilities Logo](DeepSkies_Logos_DeepUtilities_v0.png)
+![Example Image of pipeline](DeepUtilities_Schematic.png)
 
 ### What is it?
 Pipeline for developing, training, and diagnosing machine learning algorithms
