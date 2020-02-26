@@ -2,7 +2,6 @@
 
 ### What is it?
 Pipeline for developing, training, and diagnosing machine learning algorithms
-![Example Image of pipeline](https://github.com/deepskies/DeepUtilities/repository_support/images/DeepSkies_Logos_DeepUtilities.png) 
 
 
 ### Why do we need it? Why is it useful?
@@ -23,6 +22,7 @@ Pipeline for developing, training, and diagnosing machine learning algorithms
 
 
 ## Example
+![Example Image of pipeline](https://github.com/deepskies/DeepUtilities/repository_support/images/DeepSkies_Logos_DeepUtilities_v0.png) 
 ![Example Image of pipeline](https://github.com/deepskies/DeepUtilities/repository_support/images/DeepUtilities_Schematic.png) 
 
 
